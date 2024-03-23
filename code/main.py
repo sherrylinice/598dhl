@@ -75,7 +75,7 @@ if MODEL == "MLP":
 
     # Parameters
     params = {'batch_size': BATCH_SIZE,
-            'num_workers': 1}
+            'num_workers': 0}
 
     training_generator, validation_generator, test_generator = get_dataloader(gd, params)
 
@@ -86,7 +86,7 @@ elif MODEL == "GCN":
 
     # Parameters
     params = {'batch_size': BATCH_SIZE,
-            'num_workers': 1}
+            'num_workers': 0}
 
     training_generator, validation_generator, test_generator = get_dataloader(gd, params)
     
@@ -99,7 +99,7 @@ elif MODEL == "Attention":
 
     # Parameters
     params = {'batch_size': BATCH_SIZE,
-            'num_workers': 1}
+            'num_workers': 0}
 
     training_generator, validation_generator, test_generator = get_attention_dataloader(gd, params)
 
