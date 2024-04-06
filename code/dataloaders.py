@@ -5,15 +5,17 @@ import shutil
 import os
 import os.path as osp
 import zipfile
+import random
 
 from transformers import BertTokenizerFast, BertModel
 
 import torch
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, RandomSampler
 
 from torch_geometric.data import Dataset as GeoDataset
 from torch_geometric.data import DataLoader as GeoDataLoader
 from torch_geometric.data import Data, Batch
+
 
 #Need a special generator for random sampling:
 
@@ -76,6 +78,9 @@ class GenerateData():
         self.descriptions[line['cid']] = line['desc']
         self.mols[line['cid']] = line['mol2vec']
         self.training_cids.append(line['cid'])
+    # sample 50% from the training_cids
+    random.seed(0)
+    self.training_cids_sample  = random.sample(self.training_cids, int(len(self.training_cids)/2))
         
     self.validation_cids = []
     #get validation set cids...
@@ -85,6 +90,7 @@ class GenerateData():
         self.descriptions[line['cid']] = line['desc']
         self.mols[line['cid']] = line['mol2vec']
         self.validation_cids.append(line['cid'])
+    self.validation_cids_sample  = random.sample(self.validation_cids, int(len(self.validation_cids)/2))
 
     self.test_cids = []
     #get test set cids...
@@ -94,13 +100,15 @@ class GenerateData():
         self.descriptions[line['cid']] = line['desc']
         self.mols[line['cid']] = line['mol2vec']
         self.test_cids.append(line['cid'])
+    self.test_cids_sample  = random.sample(self.test_cids, int(len(self.test_cids)/2))
 
   def generate_examples_train(self):
     """Yields examples."""
+    # np.random.shuffle(self.training_cids)
+    np.random.shuffle(self.training_cids_sample)
 
-    np.random.shuffle(self.training_cids)
-
-    for cid in self.training_cids:
+    # for cid in self.training_cids:
+    for cid in self.training_cids_sample:
       text_input = self.text_tokenizer(self.descriptions[cid], truncation=True, max_length=self.text_trunc_length,
                                         padding='max_length', return_tensors = 'np')
 
@@ -122,9 +130,11 @@ class GenerateData():
   def generate_examples_val(self):
     """Yields examples."""
 
-    np.random.shuffle(self.validation_cids)
+    # np.random.shuffle(self.validation_cids)
+    np.random.shuffle(self.validation_cids_sample)
 
-    for cid in self.validation_cids:
+    # for cid in self.validation_cids:
+    for cid in self.validation_cids_sample:
         text_input = self.text_tokenizer(self.descriptions[cid], truncation=True, padding = 'max_length', 
                                          max_length=self.text_trunc_length, return_tensors = 'np')
 
@@ -148,9 +158,11 @@ class GenerateData():
   def generate_examples_test(self):
     """Yields examples."""
 
-    np.random.shuffle(self.test_cids)
+    # np.random.shuffle(self.test_cids)
+    np.random.shuffle(self.test_cids_sample)
 
-    for cid in self.test_cids:
+    # for cid in self.test_cids:
+    for cid in self.test_cids_sample:
         text_input = self.text_tokenizer(self.descriptions[cid], truncation=True, padding = 'max_length', 
                                          max_length=self.text_trunc_length, return_tensors = 'np')
 
@@ -207,12 +219,21 @@ class MolDataset(Dataset):
 
 def get_dataloader(data_generator, params):
 
-    training_set = MolDataset(data_generator.generate_examples_train, len(data_generator.training_cids))
-    validation_set = MolDataset(data_generator.generate_examples_val, len(data_generator.validation_cids))
-    test_set = MolDataset(data_generator.generate_examples_test, len(data_generator.test_cids))
+    # training_set = MolDataset(data_generator.generate_examples_train, len(data_generator.training_cids))
+    training_set = MolDataset(data_generator.generate_examples_train, len(data_generator.training_cids_sample))
+    validation_set = MolDataset(data_generator.generate_examples_val, len(data_generator.validation_cids_sample))
+    test_set = MolDataset(data_generator.generate_examples_test, len(data_generator.test_cids_sample))
 
-    training_generator = DataLoader(training_set, **params)
-    validation_generator = DataLoader(validation_set, **params)
+
+    # train_sampler = RandomSampler(training_set, num_samples = int(training_set.__len__()/2))
+    # validation_sampler = RandomSampler(validation_set, num_samples = int(validation_set.__len__()/2))
+
+    training_generator = DataLoader(training_set, 
+                                    # sampler = train_sampler, 
+                                    **params)
+    validation_generator = DataLoader(validation_set,
+                                      # sampler = validation_sampler,  
+                                      **params)
     test_generator = DataLoader(test_set, **params)
 
 
@@ -616,13 +637,24 @@ def get_attention_graph_data(data_generator, graph_data_path, mol_trunc_length):
 
 
 def get_attention_dataloader(data_generator, params):
+    
 
+    # random sampler implementation
+    # np.random.seed(0)
+    # torch.manual_seed(0)
+    
     training_set = AttentionDataset(data_generator.generate_examples_train, len(data_generator.training_cids))
     validation_set = AttentionDataset(data_generator.generate_examples_val, len(data_generator.validation_cids))
     test_set = AttentionDataset(data_generator.generate_examples_test, len(data_generator.test_cids))
 
-    training_generator = DataLoader(training_set, **params)
-    validation_generator = DataLoader(validation_set, **params)
+    # train_sampler = RandomSampler(training_set, num_samples = int(training_set.__len__()/2))
+    # validation_sampler = RandomSampler(validation_set, num_samples = int(validation_set.__len__()/2))
+    training_generator = DataLoader(training_set, 
+                                    # sampler = train_sampler
+                                    **params)
+    validation_generator = DataLoader(validation_set, 
+                                      # sampler = validation_sampler
+                                      **params)
     test_generator = DataLoader(test_set, **params)
 
 
