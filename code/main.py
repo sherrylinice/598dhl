@@ -195,7 +195,7 @@ for epoch in range(epochs):
     train_acc.append(running_acc / (i+1))
 
     print("Epoch", epoch+1, "training loss:\t\t", running_loss / (i+1), ". Time =", (time.time()-start_time), "seconds.")
-    if MODEL == "Attention": print("Training Accuracy:", train_acc[-1])
+    print("Training Accuracy:", train_acc[-1])
 
 
 
