@@ -108,8 +108,6 @@ elif MODEL == "Attention":
     model = AttentionModel(num_node_features=graph_batcher_tr.dataset.num_node_features, ninp = 768, nout = 300, nhead = 8, nhid = 512, nlayers = 3, 
         graph_hidden_channels = 768, mol_trunc_length=mol_trunc_length, temp=0.07)
 
-
-
 bert_params = list(model.text_transformer_model.parameters())
 
 optimizer = optim.Adam([
