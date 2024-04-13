@@ -152,8 +152,9 @@ def get_ranks(text_chem_cos, ranks_avg, offset, split= ""):
             cid_locs = np.argsort(emb[k,:])[::-1]
             ranks = np.argsort(cid_locs) 
             
-            #ranks_avg[j,:] = np.maximum(ranks_avg[j,:], ranks)
-            ranks_avg[j,:] = ranks_avg[j,:] + ranks 
+            # Additional experiment: change rank sum to maximum rank. add the next line.  
+            ranks_avg[j,:] = np.maximum(ranks_avg[j,:], ranks)
+            #ranks_avg[j,:] = ranks_avg[j,:] + ranks 
             
             rank = ranks[j+offset] + 1
             ranks_tmp.append(rank)
