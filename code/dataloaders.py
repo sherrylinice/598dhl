@@ -79,9 +79,9 @@ class GenerateData():
         self.mols[line['cid']] = line['mol2vec']
         self.training_cids.append(line['cid'])
     # sample 50% from the training_cids
-    random.seed(0)
-    self.training_cids_sample  = random.sample(self.training_cids, int(len(self.training_cids)/2))
-   # self.training_cids_sample = self.training_cids
+    #random.seed(0)
+    #self.training_cids_sample  = random.sample(self.training_cids, int(len(self.training_cids)/2))
+    self.training_cids_sample = self.training_cids
         
     self.validation_cids = []
     #get validation set cids...
