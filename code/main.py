@@ -347,7 +347,15 @@ else: #Save association rules
     mha_weights = {}
     def get_activation(name):
         def hook(model, input, output):
-            mha_weights[cid] = output[1].cpu().detach().numpy()
+            # print("Output value:", output)
+            # print(f"len(output): {len(output)}")
+            # print(f"output[0].cpu().detach().numpy(): {output[0].cpu().detach().numpy()}")
+            # print(f"output[1]: {output[1]}")
+            # print(f"output[1].cpu().detach().numpy(): {output[1].cpu().detach().numpy()}")
+            if output[0] is not None:
+                mha_weights[cid] = output[0].cpu().detach().numpy()
+            else:
+               print("Attention weights are None for cid:", cid)
         return hook
 
 
@@ -370,12 +378,15 @@ else: #Save association rules
         out = model(text, graph_batch, text_mask, molecule_mask)
         
         #for memory reasons
-        mol_length = graph_batch.x.shape[0]
-        text_input = gd.text_tokenizer(gd.descriptions[cid], truncation=True, padding = 'max_length', 
+        if cid in mha_weights:
+            mol_length = graph_batch.x.shape[0]
+            text_input = gd.text_tokenizer(gd.descriptions[cid], truncation=True, padding = 'max_length', 
                                             max_length=gd.text_trunc_length - 1)
-        text_length = np.sum(text_input['attention_mask'])
+            text_length = np.sum(text_input['attention_mask'])
         
-        mha_weights[cid] = mha_weights[cid][0,:text_length, :mol_length]
+            mha_weights[cid] = mha_weights[cid][0,:text_length, :mol_length]
+        else:
+            print(f"Skipping cid {cid} as attention weights are not available.")
 
         if (i+1) % 1000 == 0: print("Training sample", i+1, "attention extracted.")
 
