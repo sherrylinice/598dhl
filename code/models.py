@@ -30,7 +30,7 @@ class MLPModel(nn.Module):
         self.register_parameter( 'temp' , self.temp )
         
         # Ablation study: adding dropout. adding the next line.
-       # self.dropout = nn.Dropout(0.5)
+        self.dropout = nn.Dropout(0.5)
 
         self.ln1 = nn.LayerNorm((nout))
         self.ln2 = nn.LayerNorm((nout))
@@ -52,11 +52,11 @@ class MLPModel(nn.Module):
 
         x = self.relu(self.mol_hidden1(molecule))
         # Ablation study: adding dropout. add the next line.
-        #x = self.dropout(x)
+        x = self.dropout(x)
 
         x = self.relu(self.mol_hidden2(x))
         # Ablation study: adding dropout. add the next line.
-        #x = self.dropout(x)
+        x = self.dropout(x)
 
         x = self.mol_hidden3(x)
         
@@ -95,7 +95,7 @@ class GCNModel(nn.Module):
         self.conv1 = GCNConv(num_node_features, graph_hidden_channels)
         
         # Ablation study: removing one convolutional layer. Remove the next line.  
-        #self.conv2 = GCNConv(graph_hidden_channels, graph_hidden_channels)
+        self.conv2 = GCNConv(graph_hidden_channels, graph_hidden_channels)
 
         self.conv3 = GCNConv(graph_hidden_channels, graph_hidden_channels)
         self.mol_hidden1 = nn.Linear(graph_hidden_channels, nhid)
@@ -125,8 +125,8 @@ class GCNModel(nn.Module):
         x = x.relu()
         
         # Ablation study: Removing one convolutional layer. Remove the next two lines. 
-        #x = self.conv2(x, edge_index)
-        #x = x.relu()
+        x = self.conv2(x, edge_index)
+        x = x.relu()
 
         x = self.conv3(x, edge_index)
 
