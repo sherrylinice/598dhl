@@ -32,8 +32,8 @@ class MLPModel(nn.Module):
         self.register_parameter( 'temp' , self.temp )
         
         # Ablation Study: Layer Normalization Removal, comment out the following two lines. 
-        self.ln1 = nn.LayerNorm((nout))
-        self.ln2 = nn.LayerNorm((nout))
+        #self.ln1 = nn.LayerNorm((nout))
+        #self.ln2 = nn.LayerNorm((nout))
 
         self.relu = nn.ReLU()
         self.selu = nn.SELU()
@@ -56,8 +56,8 @@ class MLPModel(nn.Module):
         x = self.mol_hidden3(x)
 
         # Ablation Study: Layer Normalization Removal, comment out the following two lines. 
-        x = self.ln1(x)
-        text_x = self.ln2(text_x)
+        #x = self.ln1(x)
+        #text_x = self.ln2(text_x)
 
         x = x * torch.exp(self.temp)
         text_x = text_x * torch.exp(self.temp)
