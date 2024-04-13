@@ -22,7 +22,8 @@ class MLPModel(nn.Module):
         self.nout = nout
 
         self.mol_hidden1 = nn.Linear(nout, nhid)
-        self.mol_hidden2 = nn.Linear(nhid, nhid)
+        # Ablation study: Reducing the number of hidden layers of the molecule encoder. Remove the next line.
+        #self.mol_hidden2 = nn.Linear(nhid, nhid)
         self.mol_hidden3 = nn.Linear(nhid, nout)
         
 
@@ -48,7 +49,9 @@ class MLPModel(nn.Module):
         text_x = self.text_hidden1(text_x)
 
         x = self.relu(self.mol_hidden1(molecule))
-        x = self.relu(self.mol_hidden2(x))
+        
+        # Ablation study: Reducing the number of hidden layers of the molecule encoder. Remove the next line.
+        #x = self.relu(self.mol_hidden2(x))
         x = self.mol_hidden3(x)
 
 
