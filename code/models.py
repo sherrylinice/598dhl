@@ -9,7 +9,7 @@ from torch_geometric.nn import GCNConv
 from torch_geometric.nn import global_mean_pool
 
 # Ablation study: changing GCN global_mean_pool to global_max_pool. Add the next line. 
-#from torch_geometric.nn import global_max_pool 
+from torch_geometric.nn import global_max_pool 
 
 from torch.nn import TransformerDecoder, TransformerDecoderLayer
 
@@ -32,8 +32,8 @@ class MLPModel(nn.Module):
         self.register_parameter( 'temp' , self.temp )
         
         # Ablation Study: Layer Normalization Removal, comment out the following two lines. 
-        #self.ln1 = nn.LayerNorm((nout))
-        #self.ln2 = nn.LayerNorm((nout))
+        self.ln1 = nn.LayerNorm((nout))
+        self.ln2 = nn.LayerNorm((nout))
 
         self.relu = nn.ReLU()
         self.selu = nn.SELU()
@@ -56,8 +56,8 @@ class MLPModel(nn.Module):
         x = self.mol_hidden3(x)
 
         # Ablation Study: Layer Normalization Removal, comment out the following two lines. 
-        #x = self.ln1(x)
-        #text_x = self.ln2(text_x)
+        x = self.ln1(x)
+        text_x = self.ln2(text_x)
 
         x = x * torch.exp(self.temp)
         text_x = text_x * torch.exp(self.temp)
@@ -119,8 +119,8 @@ class GCNModel(nn.Module):
         
         # Ablation study: chanhing global_mean_pool to global_max_pool. Comment out the next line and add the new line.
         # Readout layer
-        x = global_mean_pool(x, batch)  # [batch_size, graph_hidden_channels]
-        # x = global_max_pool(x, batch)
+        # x = global_mean_pool(x, batch)  # [batch_size, graph_hidden_channels]
+        x = global_max_pool(x, batch)
         
         x = self.mol_hidden1(x).relu()
         x = self.mol_hidden2(x).relu()
