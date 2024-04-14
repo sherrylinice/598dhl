@@ -98,7 +98,6 @@ class MLPModel(nn.Module):
 
 
 class GCNModel(nn.Module):
-    #def __init__(self, num_node_features, ninp, nout, nhid, graph_hidden_channels):
     def __init__(self, num_node_features, ninp, nout, nhid, graph_hidden_channels,ablation_option):
         super(GCNModel, self).__init__()
         
@@ -122,8 +121,9 @@ class GCNModel(nn.Module):
         #For GCN:
         self.conv1 = GCNConv(num_node_features, graph_hidden_channels)
         
-        # Ablation study: removing one convolutional layer. Remove the next line.  
-        #self.conv2 = GCNConv(graph_hidden_channels, graph_hidden_channels)
+        # Ablation study: removing one convolutional layer. 
+        if not ablation_option.conv_layer_removal:
+            self.conv2 = GCNConv(graph_hidden_channels, graph_hidden_channels)
 
         self.conv3 = GCNConv(graph_hidden_channels, graph_hidden_channels)
         self.mol_hidden1 = nn.Linear(graph_hidden_channels, nhid)
@@ -152,9 +152,10 @@ class GCNModel(nn.Module):
         x = self.conv1(x, edge_index)
         x = x.relu()
         
-        # Ablation study: Removing one convolutional layer. Remove the next two lines. 
-        #x = self.conv2(x, edge_index)
-        #x = x.relu()
+        # Ablation study: Removing one convolutional layer. 
+        if not self.ablation_option.conv_layer_removal:
+            x = self.conv2(x, edge_index)
+            x = x.relu()
 
         x = self.conv3(x, edge_index)
         
