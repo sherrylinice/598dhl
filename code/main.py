@@ -22,6 +22,8 @@ from dataloaders import get_dataloader, GenerateData, get_graph_data, get_attent
 
 import argparse
 
+from ablation_option import AblationOption
+
 parser = argparse.ArgumentParser(description='Run Text2Mol')
 parser.add_argument('--data', metavar='data', type=str, 
                     help='directory where data is located')
@@ -43,6 +45,11 @@ parser.add_argument('--lr', type=float, nargs='?', default=1e-4,
                     help='learning rate')
 parser.add_argument('--bert_lr', type=float, nargs='?', default=3e-5,
                     help='Size of data batch.')
+parser.add_argument('--normalization_layer_removal', type=bool, nargs='?', default=False,
+                    help='True or False')
+parser.add_argument('--max_pool', type=bool, nargs='?', default=False,
+                    help='True or False')
+#parser.add_argument('--max_pool', type=bool, nargs='?', default=False, help='True or False')
 
 args = parser.parse_args()  
 data_path = args.data
@@ -68,6 +75,8 @@ path_molecules = osp.join(data_path, "ChEBI_definitions_substructure_corpus.cp")
 
 graph_data_path = osp.join(data_path, "mol_graphs.zip")
 
+ablation_option = AblationOption(args.normalization_layer_removal, args.max_pool)
+#ablation_option = AblationOption(args.normalization_layer_removal, args.max_pool)
 
 
 if MODEL == "MLP":
@@ -79,7 +88,7 @@ if MODEL == "MLP":
 
     training_generator, validation_generator, test_generator = get_dataloader(gd, params)
 
-    model = MLPModel(ninp = 768, nhid = 600, nout = 300)
+    model = MLPModel(ninp = 768, nhid = 600, nout = 300, ablation_option = ablation_option)
 
 elif MODEL == "GCN":
     gd = GenerateData(text_trunc_length, path_train, path_val, path_test, path_molecules, path_token_embs)
@@ -92,7 +101,8 @@ elif MODEL == "GCN":
     
     graph_batcher_tr, graph_batcher_val, graph_batcher_test = get_graph_data(gd, graph_data_path)
 
-    model = GCNModel(num_node_features=graph_batcher_tr.dataset.num_node_features, ninp = 768, nhid = 600, nout = 300, graph_hidden_channels = 600)
+    #model = GCNModel(num_node_features=graph_batcher_tr.dataset.num_node_features, ninp = 768, nhid = 600, nout = 300, graph_hidden_channels = 600, ablation_option = ablation_option)
+    model = GCNModel(num_node_features=gragh_batcher_tr.dataset.num_node_features, ninp = 768, nhid = 600, nout = 300, gragh_hidden_channels = 600, ablation_option = ablation_option)
     
 
 elif MODEL == "Attention":
