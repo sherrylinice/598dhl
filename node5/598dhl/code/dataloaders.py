@@ -103,7 +103,6 @@ class GenerateData():
         self.descriptions[line['cid']] = line['desc']
         self.mols[line['cid']] = line['mol2vec']
         self.test_cids.append(line['cid'])
-
     # self.test_cids_sample  = random.sample(self.test_cids, int(len(self.test_cids)/2))
 
     self.test_cids_sample  = self.test_cids
