@@ -154,7 +154,7 @@ def get_ranks(text_chem_cos, ranks_avg, offset, split= ""):
             cid_locs = np.argsort(emb[k,:])[::-1]
             ranks = np.argsort(cid_locs) 
             
-            # Additional experiment: change rank sum to maximum rank. add the next line.  
+            # Additional experiment 1: change rank sum to maximum rank. add the next line.  
             # ranks_avg[j,:] = np.maximum(ranks_avg[j,:], ranks)
             ranks_avg[j,:] = ranks_avg[j,:] + ranks 
             
@@ -218,3 +218,30 @@ if args.test:
     new_test_ranks = np.diag(test_final_ranks[:,offset_test:])
 
     print_ranks(new_test_ranks, "e", split="Test Ensemble")
+
+#  Additional experiment 2: Weighted rank average ensemble
+# Calculate ensemble using weighted rank average
+#def calculate_ensemble_weighted_rank_average(ranks_list, weights):
+    #weighted_ranks = [ranks * weight for ranks, weight in zip(ranks_list, weights)]
+    #ensemble_ranks = np.sum(weighted_ranks, axis=0)
+    #return ensemble_ranks
+
+# Process ensemble using weighted rank average
+#if args.train:
+    #train_mrr_list = [np.mean(1 / ranks) for ranks in ranks_train]
+    #train_weights = [mrr / sum(train_mrr_list) for mrr in train_mrr_list]
+    #ensemble_train_ranks = calculate_ensemble_weighted_rank_average(ranks_train, train_weights)
+    #print_ranks(ensemble_train_ranks, 'Weighted Rank Average Ensemble', split="Training")
+
+#if args.val:
+    #val_mrr_list = [np.mean(1 / ranks) for ranks in ranks_val]
+    #val_weights = [mrr / sum(val_mrr_list) for mrr in val_mrr_list]
+    #ensemble_val_ranks = calculate_ensemble_weighted_rank_average(ranks_val, val_weights)
+    #print_ranks(ensemble_val_ranks, 'Weighted Rank Average Ensemble', split="Validation")
+
+#if args.test:
+    #test_mrr_list = [np.mean(1 / ranks) for ranks in ranks_test]
+    #test_weights = [mrr / sum(test_mrr_list) for mrr in test_mrr_list]
+    #ensemble_test_ranks = calculate_ensemble_weighted_rank_average(ranks_test, test_weights)
+    #print_ranks(ensemble_test_ranks, 'Weighted Rank Average Ensemble', split="Test")
+
