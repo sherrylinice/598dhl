@@ -39,8 +39,8 @@ class MLPModel(nn.Module):
             self.ln2 = nn.LayerNorm((nout))
 
         # Ablation Study: Layer Normalization Removal, comment out the following two lines. 
-        #self.ln1 = nn.LayerNorm((nout))
-        #self.ln2 = nn.LayerNorm((nout))
+        self.ln1 = nn.LayerNorm((nout))
+        self.ln2 = nn.LayerNorm((nout))
 
         self.relu = nn.ReLU()
         self.selu = nn.SELU()
@@ -67,8 +67,8 @@ class MLPModel(nn.Module):
             text_x = self.ln2(text_x)
 
         # Ablation Study: Layer Normalization Removal, comment out the following two lines. 
-        #x = self.ln1(x)
-        #text_x = self.ln2(text_x)
+        x = self.ln1(x)
+        text_x = self.ln2(text_x)
 
         x = x * torch.exp(self.temp)
         text_x = text_x * torch.exp(self.temp)
@@ -136,6 +136,8 @@ class GCNModel(nn.Module):
             x = global_mean_pool(x, batch)  # [batch_size, graph_hidden_channels]
         else:
             x = global_max_pool(x, batch)
+        # x = global_mean_pool(x, batch)  # [batch_size, graph_hidden_channels]
+        # x = global_max_pool(x, batch)
         
         x = self.mol_hidden1(x).relu()
         x = self.mol_hidden2(x).relu()
