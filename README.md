@@ -5,7 +5,7 @@
 Sherry Li (xuehail2@illinois.edu), Jo Yang (jiaoy2@illinois.edu)
 
 ## Project Draft Jupyter Notebook:  
-[https://colab.research.google.com/drive/1Iu8NzdJK-rLYjnSowq9CnmQDnHbHSMkQ#scrollTo=j01aH0PR4Sg-](https://github.com/sherrylinice/598dhl/blob/main/DL4H_Team_21.ipynb)
+[https://github.com/sherrylinice/598dhl/blob/main/DL4H_Team_21.ipynb)](https://github.com/sherrylinice/598dhl/blob/main/DL4H_Team_21.ipynb)
 
 ## Text2Mol
 
