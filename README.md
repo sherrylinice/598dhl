@@ -1,6 +1,13 @@
   
 
-# Text2Mol
+# 598DHL Team 21
+
+Sherry Li (xuehail2@illinois.edu), Jo Yang (jiaoy2@illinois.edu)
+
+## Project Draft Jupyter Notebook:  
+(add here)
+
+## Text2Mol
 
 This is code for the paper [Text2Mol: Cross-Modal Molecule Retrieval with Natural Language Queries](https://aclanthology.org/2021.emnlp-main.47/)
 
@@ -28,7 +35,7 @@ For ranker_threshold.py:
 | File      | Description |
 | ----------- | ----------- |
 | main.py      | Train Text2Mol.       |
-| main_parallel.py   | A lightly-tested parallel version.        |
+| main_parallel.py   | A lightly-tested parallel version. Not used in our project.     |
 | ranker.py   | Rank output embeddings.        |
 | ensemble.py   | Rank ensemble of output embeddings.        |
 | test_example.py   | Runs a version of the model that you can query with arbitrary inputs for testing.        |
@@ -37,6 +44,11 @@ For ranker_threshold.py:
 | models.py   | The three model definitions: MLP, GCN, and Attention.        |
 | losses.py   | Losses used for training.        |
 | dataloaders.py   | Code for loading the data.        |
+| ablation_option.py   | The ablation options included in this project draft.        |
+| dataloaders_length_ablation.py   | Additional ablation study.        |
+| main_loss_ablation.py   | Additional ablation study.        |
+| main_sample.py   | Use a small sample for testing.        |
+| requirements.yml   | Requirement files.        |
 | notebooks   | Jupyter Notebooks/Google Collab implementations.        |
 
 
@@ -63,6 +75,11 @@ To get embeddings from a specific checkpoint:
 To plot cosine score vs ranking:
 
 > python code/ranker_threshold.py test_output/embeddings --train --val --test --output_file threshold_image.png
+
+To run ablation study: 
+> python code/main.py --data data --output_path test_output --model MLP --epochs 40 --batch_size 32 --normalization_layer_removal = True
+
+Ablation args include : normalization_layer_removal, max_pool, hidden_layer_removal, conv_layer_removal, add_dropout.
 
 All code has been rewritten as Python files so far except association_rules.ipynb.
 
