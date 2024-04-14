@@ -8,18 +8,23 @@ import torch.nn.functional as F
 from torch_geometric.nn import GCNConv
 from torch_geometric.nn import global_mean_pool
 
+# Ablation study: changing GCN global_mean_pool to global_max_pool. Add the next line. 
+from torch_geometric.nn import global_max_pool 
+
 from torch.nn import TransformerDecoder, TransformerDecoderLayer
 
+from ablation_option import AblationOption
+
 class MLPModel(nn.Module):
-    def __init__(self, ninp, nout, nhid):
+    def __init__(self, ninp, nout, nhid, ablation_option):
         super(MLPModel, self).__init__()
         
-
         self.text_hidden1 = nn.Linear(ninp, nout)
 
         self.ninp = ninp
         self.nhid = nhid
         self.nout = nout
+        self.ablation_option = ablation_option
 
         self.mol_hidden1 = nn.Linear(nout, nhid)
         # Ablation study: Reducing the number of hidden layers of the molecule encoder. Remove the next line.
@@ -29,7 +34,12 @@ class MLPModel(nn.Module):
 
         self.temp = nn.Parameter(torch.Tensor([0.07]))
         self.register_parameter( 'temp' , self.temp )
+        
+        if not ablation_option.normalization_layer_removal:
+            self.ln1 = nn.LayerNorm((nout))
+            self.ln2 = nn.LayerNorm((nout))
 
+        # Ablation Study: Layer Normalization Removal, comment out the following two lines. 
         self.ln1 = nn.LayerNorm((nout))
         self.ln2 = nn.LayerNorm((nout))
 
@@ -46,6 +56,7 @@ class MLPModel(nn.Module):
         text_encoder_output = self.text_transformer_model(text, attention_mask = text_mask)
 
         text_x = text_encoder_output['pooler_output']
+        
         text_x = self.text_hidden1(text_x)
 
         x = self.relu(self.mol_hidden1(molecule))
@@ -53,8 +64,12 @@ class MLPModel(nn.Module):
         # Ablation study: Reducing the number of hidden layers of the molecule encoder. Remove the next line.
         #x = self.relu(self.mol_hidden2(x))
         x = self.mol_hidden3(x)
+        
+        if not self.ablation_option.normalization_layer_removal:
+            x = self.ln1(x)
+            text_x = self.ln2(text_x)
 
-
+        # Ablation Study: Layer Normalization Removal, comment out the following two lines. 
         x = self.ln1(x)
         text_x = self.ln2(text_x)
 
@@ -64,9 +79,9 @@ class MLPModel(nn.Module):
         return text_x, x
 
 
-
 class GCNModel(nn.Module):
-    def __init__(self, num_node_features, ninp, nout, nhid, graph_hidden_channels):
+    #def __init__(self, num_node_features, ninp, nout, nhid, graph_hidden_channels):
+    def __init__(self, num_node_features, ninp, nout, nhid, graph_hidden_channels,ablation_option):
         super(GCNModel, self).__init__()
         
 
@@ -75,6 +90,7 @@ class GCNModel(nn.Module):
         self.ninp = ninp
         self.nhid = nhid
         self.nout = nout
+        self.ablation_option = ablation_option
 
         self.temp = nn.Parameter(torch.Tensor([0.07]))
         self.register_parameter( 'temp' , self.temp )
@@ -116,10 +132,15 @@ class GCNModel(nn.Module):
         x = self.conv2(x, edge_index)
         x = x.relu()
         x = self.conv3(x, edge_index)
-
+        
+        # Ablation study: chanhing global_mean_pool to global_max_pool. Comment out the next line and add the new line.
         # Readout layer
-        x = global_mean_pool(x, batch)  # [batch_size, graph_hidden_channels]
-
+        if not self.ablation_option.max_pool: 
+            x = global_mean_pool(x, batch)  # [batch_size, graph_hidden_channels]
+        else:
+            x = global_max_pool(x, batch)
+        # x = global_mean_pool(x, batch)  # [batch_size, graph_hidden_channels]
+        # x = global_max_pool(x, batch)
         
         x = self.mol_hidden1(x).relu()
         x = self.mol_hidden2(x).relu()
