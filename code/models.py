@@ -77,8 +77,8 @@ class MLPModel(nn.Module):
 
 
 class GCNModel(nn.Module):
-    def __init__(self, num_node_features, ninp, nout, nhid, graph_hidden_channels):
-    #def __init__(self, num_node_features, ninp, nout, nhid, graph_hidden_channels,ablation_option):
+    #def __init__(self, num_node_features, ninp, nout, nhid, graph_hidden_channels):
+    def __init__(self, num_node_features, ninp, nout, nhid, graph_hidden_channels,ablation_option):
         super(GCNModel, self).__init__()
         
 
@@ -87,7 +87,7 @@ class GCNModel(nn.Module):
         self.ninp = ninp
         self.nhid = nhid
         self.nout = nout
-        #self.ablation_option = ablation_option
+        self.ablation_option = ablation_option
 
         self.temp = nn.Parameter(torch.Tensor([0.07]))
         self.register_parameter( 'temp' , self.temp )
@@ -132,10 +132,10 @@ class GCNModel(nn.Module):
         
         # Ablation study: chanhing global_mean_pool to global_max_pool. Comment out the next line and add the new line.
         # Readout layer
-        #if not self.ablation_option.max_pool: 
-        #    x = global_mean_pool(x, batch)  # [batch_size, graph_hidden_channels]
-        #else:
-        #    x = global_max_pool(x, batch)
+        if not self.ablation_option.max_pool: 
+            x = global_mean_pool(x, batch)  # [batch_size, graph_hidden_channels]
+        else:
+            x = global_max_pool(x, batch)
         
         x = self.mol_hidden1(x).relu()
         x = self.mol_hidden2(x).relu()

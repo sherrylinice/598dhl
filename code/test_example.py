@@ -30,6 +30,8 @@ parser.add_argument('model', type=str, default='MLP', nargs='?',
                     help="model type from 'MLP, 'GCN', 'Attention'. Only MLP is known to work.")
 parser.add_argument('--normalization_layer_removal', type=bool, nargs='?', default=False,
                     help='True or False')
+rser.add_argument('--max_pool', type=bool, nargs='?', default=False,
+                    help='True or False')
 
 args = parser.parse_args()
 emb_dir = args.emb_dir[0]
@@ -53,7 +55,7 @@ text_trunc_length = 256
 
 mol_trunc_length = 512 #attention model only
 
-ablation_option = AblationOption(args.normalization_layer_removal)
+ablation_option = AblationOption(args.normalization_layer_removal, args.max_pool)
 
 if MODEL == "MLP":
     gd = GenerateData(text_trunc_length, path_train, path_val, path_test, path_molecules, path_token_embs)
@@ -77,7 +79,7 @@ elif MODEL == "GCN":
     
     graph_batcher_tr, graph_batcher_val, graph_batcher_test = get_graph_data(gd, graph_data_path)
 
-    model = GCNModel(num_node_features=graph_batcher_tr.dataset.num_node_features, ninp = 768, nhid = 600, nout = 300, graph_hidden_channels = 600)
+    model = GCNModel(num_node_features=graph_batcher_tr.dataset.num_node_features, ninp = 768, nhid = 600, nout = 300, graph_hidden_channels = 600, ablation_option = ablation_option)
 
 elif MODEL == "Attention":
     print('Using the attention model here is not intended behavior.')
