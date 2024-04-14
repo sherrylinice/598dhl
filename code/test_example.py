@@ -30,7 +30,9 @@ parser.add_argument('model', type=str, default='MLP', nargs='?',
                     help="model type from 'MLP, 'GCN', 'Attention'. Only MLP is known to work.")
 parser.add_argument('--normalization_layer_removal', type=bool, nargs='?', default=False,
                     help='True or False')
-rser.add_argument('--max_pool', type=bool, nargs='?', default=False,
+parser.add_argument('--max_pool', type=bool, nargs='?', default=False,
+                    help='True or False')
+parser.add_argument('--hidden_layer_removal', type=bool, nargs='?', default=False,
                     help='True or False')
 
 args = parser.parse_args()
@@ -55,7 +57,7 @@ text_trunc_length = 256
 
 mol_trunc_length = 512 #attention model only
 
-ablation_option = AblationOption(args.normalization_layer_removal, args.max_pool)
+ablation_option = AblationOption(args.normalization_layer_removal, args.max_pool, args.hidden_layer_removal)
 
 if MODEL == "MLP":
     gd = GenerateData(text_trunc_length, path_train, path_val, path_test, path_molecules, path_token_embs)
