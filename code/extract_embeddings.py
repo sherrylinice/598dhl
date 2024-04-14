@@ -53,6 +53,8 @@ parser.add_argument('--hidden_layer_removal', type=bool, nargs='?', default=Fals
                     help='True or False')
 parser.add_argument('--conv_layer_removal', type=bool, nargs='?', default=False,
                     help='True or False')
+parser.add_argument('--add_dropout', type=bool, nargs='?', default=False,
+                    help='True or False')
 
 args = parser.parse_args()
 data_path = args.data
@@ -73,7 +75,7 @@ path_molecules = osp.join(data_path, "ChEBI_defintions_substructure_corpus.cp")
 
 graph_data_path = osp.join(data_path, "mol_graphs.zip")
 
-ablation_option = AblationOption(args.normalization_layer_removal, args.max_pool, args.hidden_layer_removal, args.conv_layer_removal)
+ablation_option = AblationOption(args.normalization_layer_removal, args.max_pool, args.hidden_layer_removal, args.conv_layer_removal, args.add_dropout)
 
 if MODEL == "MLP":
     gd = GenerateData(text_trunc_length, path_train, path_val, path_test, path_molecules, path_token_embs)
