@@ -40,7 +40,7 @@ class MLPModel(nn.Module):
         
 
         # Ablation study: adding dropout. adding the next line.
-       # self.dropout = nn.Dropout(0.5)
+        self.dropout = nn.Dropout(0.5)
 
         # Ablation Study: Layer Normalization Removal. 
         if not ablation_option.normalization_layer_removal:
@@ -66,11 +66,11 @@ class MLPModel(nn.Module):
         x = self.relu(self.mol_hidden1(molecule))
 
         # Ablation study: adding dropout. add the next line.
-        #x = self.dropout(x)
+        x = self.dropout(x)
 
         # x = self.relu(self.mol_hidden2(x))
         # Ablation study: adding dropout. add the next line.
-        #x = self.dropout(x)
+        x = self.dropout(x)
 
         x = self.mol_hidden3(x)
         
@@ -156,6 +156,7 @@ class GCNModel(nn.Module):
         if not self.ablation_option.conv_layer_removal:
             x = self.conv2(x, edge_index)
             x = x.relu()
+
 
         x = self.conv3(x, edge_index)
         
