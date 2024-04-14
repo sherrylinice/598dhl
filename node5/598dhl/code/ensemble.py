@@ -199,46 +199,27 @@ for i in range(NUM_MODELS):
 # Original ensemble strategy:
 #Process ensemble:
 
-if args.train:
-    sorted = np.argsort(tr_avg_ranks)
-    new_tr_ranks = np.diag(np.argsort(sorted)) + 1
-    print_ranks(new_tr_ranks, "e", split="Training Ensemble")
+#if args.train:
+#    sorted = np.argsort(tr_avg_ranks)
+#    new_tr_ranks = np.diag(np.argsort(sorted)) + 1
+#    print_ranks(new_tr_ranks, "e", split="Training Ensemble")
 
-if args.val:
-    sorted = np.argsort(val_avg_ranks)
-    val_final_ranks = np.argsort(sorted) + 1
-    new_val_ranks = np.diag(val_final_ranks[:,offset_val:offset_test])
+#if args.val:
+#    sorted = np.argsort(val_avg_ranks)
+#    val_final_ranks = np.argsort(sorted) + 1
+#    new_val_ranks = np.diag(val_final_ranks[:,offset_val:offset_test])
 
-    print_ranks(new_val_ranks, "e", split="Validation Ensemble")
+#    print_ranks(new_val_ranks, "e", split="Validation Ensemble")
 
-if args.test:
-    sorted = np.argsort(test_avg_ranks)
-    test_final_ranks = np.argsort(sorted) + 1
-    new_test_ranks = np.diag(test_final_ranks[:,offset_test:])
+#if args.test:
+#    sorted = np.argsort(test_avg_ranks)
+#    test_final_ranks = np.argsort(sorted) + 1
+#    new_test_ranks = np.diag(test_final_ranks[:,offset_test:])
 
-    print_ranks(new_test_ranks, "e", split="Test Ensemble")
+#    print_ranks(new_test_ranks, "e", split="Test Ensemble")
 
-# Additional experiment 1: rank average ensemble
-# Calculate ensemble using rank average
-"""
-def calculate_ensemble_rank_average(ranks_list):
-    ensemble_ranks = np.mean(ranks_list, axis=0)
-    return ensemble_ranks
 
-# Process ensemble using rank average
-if args.train:
-    ensemble_train_ranks = calculate_ensemble_rank_average(ranks_train)
-    print_ranks(ensemble_train_ranks, 'Rank Average Ensemble', split="Training")
-
-if args.val:
-    ensemble_val_ranks = calculate_ensemble_rank_average(ranks_val)
-    print_ranks(ensemble_val_ranks, 'Rank Average Ensemble', split="Validation")
-
-if args.test:
-    ensemble_test_ranks = calculate_ensemble_rank_average(ranks_test)
-    print_ranks(ensemble_test_ranks, 'Rank Average Ensemble', split="Test")
-
-# Additional experiment 2: Weighted rank average ensemble
+#  Additional experiment 2: Weighted rank average ensemble
 # Calculate ensemble using weighted rank average
 
 def calculate_ensemble_weighted_rank_average(ranks_list, weights):
@@ -268,76 +249,75 @@ if args.test:
 # Additional experiment 3: weighted rank average and relative rankings
 # Calculate ensemble using weighted rank average and relative rankings
 
-def calculate_ensemble_weighted_rank_average_relative(ranks_list, weights):
+#def calculate_ensemble_weighted_rank_average_relative(ranks_list, weights):
     # Convert ranks to relative rankings
-    relative_ranks_list = []
-    for ranks in ranks_list:
-        relative_ranks = np.argsort(ranks) + 1
-        relative_ranks_list.append(relative_ranks)
+#    relative_ranks_list = []
+#    for ranks in ranks_list:
+#        relative_ranks = np.argsort(ranks) + 1
+#        relative_ranks_list.append(relative_ranks)
     
     # Calculate weighted relative ranks
-    weighted_relative_ranks = [relative_ranks * weight for relative_ranks, weight in zip(relative_ranks_list, weights)]
-    ensemble_relative_ranks = np.sum(weighted_relative_ranks, axis=0)
+#    weighted_relative_ranks = [relative_ranks * weight for relative_ranks, weight in zip(relative_ranks_list, weights)]
+#    ensemble_relative_ranks = np.sum(weighted_relative_ranks, axis=0)
     
     # Convert ensemble relative ranks back to actual ranks
-    ensemble_ranks = np.argsort(ensemble_relative_ranks) + 1
+#    ensemble_ranks = np.argsort(ensemble_relative_ranks) + 1
     
-    return ensemble_ranks
+#    return ensemble_ranks
 
 # Process ensemble using weighted rank average and relative rankings
-if args.train:
-    train_mrr_list = [np.mean(1 / ranks) for ranks in ranks_train]
-    train_weights = [mrr / sum(train_mrr_list) for mrr in train_mrr_list]
-    ensemble_train_ranks = calculate_ensemble_weighted_rank_average_relative(ranks_train, train_weights)
-    print_ranks(ensemble_train_ranks, 'Weighted Rank Average Ensemble (Relative)', split="Training")
+#if args.train:
+#    train_mrr_list = [np.mean(1 / ranks) for ranks in ranks_train]
+#    train_weights = [mrr / sum(train_mrr_list) for mrr in train_mrr_list]
+#    ensemble_train_ranks = calculate_ensemble_weighted_rank_average_relative(ranks_train, train_weights)
+#    print_ranks(ensemble_train_ranks, 'Weighted Rank Average Ensemble (Relative)', split="Training")
 
-if args.val:
-    val_mrr_list = [np.mean(1 / ranks) for ranks in ranks_val]
-    val_weights = [mrr / sum(val_mrr_list) for mrr in val_mrr_list]
-    ensemble_val_ranks = calculate_ensemble_weighted_rank_average_relative(ranks_val, val_weights)
-    print_ranks(ensemble_val_ranks, 'Weighted Rank Average Ensemble (Relative)', split="Validation")
+#if args.val:
+#    val_mrr_list = [np.mean(1 / ranks) for ranks in ranks_val]
+#    val_weights = [mrr / sum(val_mrr_list) for mrr in val_mrr_list]
+#    ensemble_val_ranks = calculate_ensemble_weighted_rank_average_relative(ranks_val, val_weights)
+#    print_ranks(ensemble_val_ranks, 'Weighted Rank Average Ensemble (Relative)', split="Validation")
 
-if args.test:
-    test_mrr_list = [np.mean(1 / ranks) for ranks in ranks_test]
-    test_weights = [mrr / sum(test_mrr_list) for mrr in test_mrr_list]
-    ensemble_test_ranks = calculate_ensemble_weighted_rank_average_relative(ranks_test, test_weights)
-    print_ranks(ensemble_test_ranks, 'Weighted Rank Average Ensemble (Relative)', split="Test")
+#if args.test:
+#    test_mrr_list = [np.mean(1 / ranks) for ranks in ranks_test]
+#    test_weights = [mrr / sum(test_mrr_list) for mrr in test_mrr_list]
+#    ensemble_test_ranks = calculate_ensemble_weighted_rank_average_relative(ranks_test, test_weights)
+#    print_ranks(ensemble_test_ranks, 'Weighted Rank Average Ensemble (Relative)', split="Test")
 
 # Calculate weighted average ranks
-if args.train:
-    train_mrr_list = [np.mean(1 / ranks) for ranks in ranks_train]
-    train_weights = [mrr / sum(train_mrr_list) for mrr in train_mrr_list]
-    tr_avg_ranks = np.zeros((n_train, n))
-    for i in range(NUM_MODELS):
-        tr_avg_ranks += np.argsort(ranks_train[i]) * train_weights[i]
+#if args.train:
+#    train_mrr_list = [np.mean(1 / ranks) for ranks in ranks_train]
+#    train_weights = [mrr / sum(train_mrr_list) for mrr in train_mrr_list]
+#    tr_avg_ranks = np.zeros((n_train, n))
+#    for i in range(NUM_MODELS):
+#        tr_avg_ranks += np.argsort(ranks_train[i]) * train_weights[i]
         
-if args.val:
-    val_mrr_list = [np.mean(1 / ranks) for ranks in ranks_val]
-    val_weights = [mrr / sum(val_mrr_list) for mrr in val_mrr_list]
-    val_avg_ranks = np.zeros((n_val, n))
-    for i in range(NUM_MODELS):
-        val_avg_ranks += np.argsort(ranks_val[i]) * val_weights[i]
+#if args.val:
+#    val_mrr_list = [np.mean(1 / ranks) for ranks in ranks_val]
+#    val_weights = [mrr / sum(val_mrr_list) for mrr in val_mrr_list]
+#    val_avg_ranks = np.zeros((n_val, n))
+#    for i in range(NUM_MODELS):
+#        val_avg_ranks += np.argsort(ranks_val[i]) * val_weights[i]
         
-if args.test:
-    test_mrr_list = [np.mean(1 / ranks) for ranks in ranks_test]
-    test_weights = [mrr / sum(test_mrr_list) for mrr in test_mrr_list]
-    test_avg_ranks = np.zeros((n_test, n))
-    for i in range(NUM_MODELS):
-        test_avg_ranks += np.argsort(ranks_test[i]) * test_weights[i]
+#if args.test:
+#    test_mrr_list = [np.mean(1 / ranks) for ranks in ranks_test]
+#    test_weights = [mrr / sum(test_mrr_list) for mrr in test_mrr_list]
+#    test_avg_ranks = np.zeros((n_test, n))
+#    for i in range(NUM_MODELS):
+#        test_avg_ranks += np.argsort(ranks_test[i]) * test_weights[i]
 
 # Process ensemble using weighted average ranks and relative rankings
-if args.train:
-    sorted_train = np.argsort(tr_avg_ranks)
-    ensemble_train_ranks = np.diag(np.argsort(sorted_train)) + 1
-    print_ranks(ensemble_train_ranks, "Weighted Average Ensemble (Relative)", split="Training")
+#if args.train:
+#    sorted_train = np.argsort(tr_avg_ranks)
+#    ensemble_train_ranks = np.diag(np.argsort(sorted_train)) + 1
+#    print_ranks(ensemble_train_ranks, "Weighted Average Ensemble (Relative)", split="Training")
 
-if args.val:
-    sorted_val = np.argsort(val_avg_ranks)
-    ensemble_val_ranks = np.diag(np.argsort(sorted_val)[:,offset_val:offset_test]) + 1
-    print_ranks(ensemble_val_ranks, "Weighted Average Ensemble (Relative)", split="Validation")
+#if args.val:
+#    sorted_val = np.argsort(val_avg_ranks)
+#    ensemble_val_ranks = np.diag(np.argsort(sorted_val)[:,offset_val:offset_test]) + 1
+#    print_ranks(ensemble_val_ranks, "Weighted Average Ensemble (Relative)", split="Validation")
 
-if args.test:
-    sorted_test = np.argsort(test_avg_ranks)
-    ensemble_test_ranks = np.diag(np.argsort(sorted_test)[:,offset_test:]) + 1
-    print_ranks(ensemble_test_ranks, "Weighted Average Ensemble (Relative)", split="Test")
-"""
+#if args.test:
+#    sorted_test = np.argsort(test_avg_ranks)
+#    ensemble_test_ranks = np.diag(np.argsort(sorted_test)[:,offset_test:]) + 1
+#    print_ranks(ensemble_test_ranks, "Weighted Average Ensemble (Relative)", split="Test")
