@@ -26,7 +26,7 @@ text_trunc_length = 256
 
 mol_trunc_length = 512 #attention model only
 
-
+from ablation_option import AblationOption
 
 import argparse
 
@@ -45,6 +45,8 @@ parser.add_argument('--mol_trunc_length', type=int, nargs='?', default=512,
                     help='Molecule truncation length.')
 parser.add_argument('--text_trunc_length', type=int, nargs='?', default=256,
                     help='Text truncation length.')
+parser.add_argument('--normalization_layer_removal', type=bool, nargs='?', default=False,
+                    help='True or False')
 
 args = parser.parse_args()
 data_path = args.data
@@ -65,6 +67,7 @@ path_molecules = osp.join(data_path, "ChEBI_defintions_substructure_corpus.cp")
 
 graph_data_path = osp.join(data_path, "mol_graphs.zip")
 
+ablation_option = AblationOption(args.normalization_layer_removal)
 
 if MODEL == "MLP":
     gd = GenerateData(text_trunc_length, path_train, path_val, path_test, path_molecules, path_token_embs)
@@ -75,7 +78,7 @@ if MODEL == "MLP":
 
     training_generator, validation_generator, test_generator = get_dataloader(gd, params)
 
-    model = MLPModel(ninp = 768, nhid = 600, nout = 300)
+    model = MLPModel(ninp = 768, nhid = 600, nout = 300, ablation_option = ablation_option)
 
 elif MODEL == "GCN":
     gd = GenerateData(text_trunc_length, path_train, path_val, path_test, path_molecules, path_token_embs)

@@ -22,6 +22,7 @@ from losses import contrastive_loss, negative_sampling_contrastive_loss
 from models import MLPModel, GCNModel, AttentionModel
 from dataloaders import get_dataloader, GenerateData, get_graph_data, get_attention_graph_data, GenerateDataAttention, get_attention_dataloader
 
+from ablation_option import AblationOption
 
 import argparse
 
@@ -46,6 +47,8 @@ parser.add_argument('--lr', type=float, nargs='?', default=1e-4,
                     help='learning rate')
 parser.add_argument('--bert_lr', type=float, nargs='?', default=3e-5,
                     help='Size of data batch.')
+parser.add_argument('--normalization_layer_removal', type=bool, nargs='?', default=False,
+                    help='True or False')
 
 args = parser.parse_args()  
 data_path = args.data
@@ -72,7 +75,7 @@ path_molecules = osp.join(data_path, "ChEBI_definitions_substructure_corpus.cp")
 
 graph_data_path = osp.join(data_path, "mol_graphs.zip")
 
-
+ablation_option = AblationOption(args.normalization_layer_removal)
 
 if MODEL == "MLP":
     gd = GenerateData(text_trunc_length, path_train, path_val, path_test, path_molecules, path_token_embs)
@@ -83,7 +86,7 @@ if MODEL == "MLP":
 
     training_generator, validation_generator, test_generator = get_dataloader(gd, params)
 
-    model = MLPModel(ninp = 768, nhid = 600, nout = 300)
+    model = MLPModel(ninp = 768, nhid = 600, nout = 300, ablation_option = ablation_option)
     
     if torch.cuda.device_count() > 1:
         print("Multiple GPUs")
