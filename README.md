@@ -77,7 +77,7 @@ To plot cosine score vs ranking:
 > python code/ranker_threshold.py test_output/embeddings --train --val --test --output_file threshold_image.png
 
 To run ablation study: 
-> python code/main.py --data data --output_path test_output --model MLP --epochs 40 --batch_size 32 --normalization_layer_removal = True
+> python code/main.py --data data --output_path test_output --model MLP --epochs 40 --batch_size 32 --normalization_layer_removal True
 
 Ablation args include : normalization_layer_removal, max_pool, hidden_layer_removal, conv_layer_removal, add_dropout.
 
