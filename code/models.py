@@ -38,9 +38,9 @@ class MLPModel(nn.Module):
         self.temp = nn.Parameter(torch.Tensor([0.07]))
         self.register_parameter( 'temp' , self.temp )
         
-
-        # Ablation study: adding dropout. adding the next line.
-        self.dropout = nn.Dropout(0.5)
+        # Ablation study: adding dropout. 
+        if ablation_option.add_dropout:
+            self.dropout = nn.Dropout(0.5)
 
         # Ablation Study: Layer Normalization Removal. 
         if not ablation_option.normalization_layer_removal:
@@ -65,19 +65,9 @@ class MLPModel(nn.Module):
 
         x = self.relu(self.mol_hidden1(molecule))
 
-        # Ablation study: adding dropout. add the next line.
-        x = self.dropout(x)
-
-        # x = self.relu(self.mol_hidden2(x))
-        # Ablation study: adding dropout. add the next line.
-        x = self.dropout(x)
-
-        x = self.mol_hidden3(x)
-        
-
-        x = self.ln1(x)
-        text_x = self.ln2(text_x)
-
+        # Ablation study: adding dropout. 
+        if ablation_option.add_dropout:
+            x = self.dropout(x)
         
         # Ablation study: Reducing the number of hidden layers of the molecule encoder. 
         if not self.ablation_option.hidden_layer_removal:
