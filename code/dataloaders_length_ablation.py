@@ -75,39 +75,36 @@ class GenerateData():
     with open(self.path_train) as f:
       reader = csv.DictReader(f, delimiter="\t", quoting=csv.QUOTE_NONE, fieldnames = ['cid', 'mol2vec', 'desc'])
       for n, line in enumerate(reader):
-        self.descriptions[line['cid']] = line['desc']
-        self.mols[line['cid']] = line['mol2vec']
-        self.training_cids.append(line['cid'])
+        if len(line['desc']) <= 300:
+          self.descriptions[line['cid']] = line['desc']
+          self.mols[line['cid']] = line['mol2vec']
+          self.training_cids.append(line['cid'])
     # sample 50% from the training_cids
-    #random.seed(0)
-    #self.training_cids_sample  = random.sample(self.training_cids, int(len(self.training_cids)/2))
-    self.training_cids_sample = self.training_cids
+    # random.seed(0)
+    # self.training_cids_sample  = random.sample(self.training_cids, int(len(self.training_cids)/2))
         
     self.validation_cids = []
     #get validation set cids...
     with open(self.path_val) as f:
       reader = csv.DictReader(f, delimiter="\t", quoting=csv.QUOTE_NONE, fieldnames = ['cid', 'mol2vec', 'desc'])
       for n, line in enumerate(reader):
-        self.descriptions[line['cid']] = line['desc']
-        self.mols[line['cid']] = line['mol2vec']
-        self.validation_cids.append(line['cid'])
-
-    #self.validation_cids_sample  = random.sample(self.validation_cids, int(len(self.validation_cids)/2))
-    self.validation_cids_sample = self.validation_cids
+        # ablation study for 300 vs less than 300 
+        if len(line['desc']) <= 300:
+          self.descriptions[line['cid']] = line['desc']
+          self.mols[line['cid']] = line['mol2vec']
+          self.validation_cids.append(line['cid'])
+    # self.validation_cids_sample  = random.sample(self.validation_cids, int(len(self.validation_cids)/2))
 
     self.test_cids = []
     #get test set cids...
     with open(self.path_test) as f:
       reader = csv.DictReader(f, delimiter="\t", quoting=csv.QUOTE_NONE, fieldnames = ['cid', 'mol2vec', 'desc'])
       for n, line in enumerate(reader):
-        self.descriptions[line['cid']] = line['desc']
-        self.mols[line['cid']] = line['mol2vec']
-        self.test_cids.append(line['cid'])
-
+        if len(line['desc']) <= 300:
+          self.descriptions[line['cid']] = line['desc']
+          self.mols[line['cid']] = line['mol2vec']
+          self.test_cids.append(line['cid'])
     # self.test_cids_sample  = random.sample(self.test_cids, int(len(self.test_cids)/2))
-
-    self.test_cids_sample  = self.test_cids
-
 
   def generate_examples_train(self):
     """Yields examples."""
