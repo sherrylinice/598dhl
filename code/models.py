@@ -38,6 +38,10 @@ class MLPModel(nn.Module):
         self.temp = nn.Parameter(torch.Tensor([0.07]))
         self.register_parameter( 'temp' , self.temp )
         
+
+        # Ablation study: adding dropout. adding the next line.
+       # self.dropout = nn.Dropout(0.5)
+
         # Ablation Study: Layer Normalization Removal. 
         if not ablation_option.normalization_layer_removal:
             self.ln1 = nn.LayerNorm((nout))
@@ -60,6 +64,20 @@ class MLPModel(nn.Module):
         text_x = self.text_hidden1(text_x)
 
         x = self.relu(self.mol_hidden1(molecule))
+
+        # Ablation study: adding dropout. add the next line.
+        #x = self.dropout(x)
+
+        # x = self.relu(self.mol_hidden2(x))
+        # Ablation study: adding dropout. add the next line.
+        #x = self.dropout(x)
+
+        x = self.mol_hidden3(x)
+        
+
+        x = self.ln1(x)
+        text_x = self.ln2(text_x)
+
         
         # Ablation study: Reducing the number of hidden layers of the molecule encoder. 
         if not self.ablation_option.hidden_layer_removal:
@@ -71,6 +89,7 @@ class MLPModel(nn.Module):
         if not self.ablation_option.normalization_layer_removal:
             x = self.ln1(x)
             text_x = self.ln2(text_x)
+
 
         x = x * torch.exp(self.temp)
         text_x = text_x * torch.exp(self.temp)
@@ -102,9 +121,13 @@ class GCNModel(nn.Module):
         
         #For GCN:
         self.conv1 = GCNConv(num_node_features, graph_hidden_channels)
-        self.conv2 = GCNConv(graph_hidden_channels, graph_hidden_channels)
+        
+        # Ablation study: removing one convolutional layer. Remove the next line.  
+        #self.conv2 = GCNConv(graph_hidden_channels, graph_hidden_channels)
+
         self.conv3 = GCNConv(graph_hidden_channels, graph_hidden_channels)
         self.mol_hidden1 = nn.Linear(graph_hidden_channels, nhid)
+       
         self.mol_hidden2 = nn.Linear(nhid, nhid)
         self.mol_hidden3 = nn.Linear(nhid, nout)
 
@@ -128,8 +151,11 @@ class GCNModel(nn.Module):
         batch = graph_batch.batch
         x = self.conv1(x, edge_index)
         x = x.relu()
-        x = self.conv2(x, edge_index)
-        x = x.relu()
+        
+        # Ablation study: Removing one convolutional layer. Remove the next two lines. 
+        #x = self.conv2(x, edge_index)
+        #x = x.relu()
+
         x = self.conv3(x, edge_index)
         
         # Ablation study: changing global_mean_pool to global_max_pool.
