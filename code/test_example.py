@@ -16,8 +16,8 @@ import torch
 from sklearn.metrics.pairwise import cosine_similarity
 
 
-
 import argparse
+from ablation_option import AblationOption
 
 parser = argparse.ArgumentParser(description='Query model for closest molecules.')
 parser.add_argument('emb_dir', metavar='emb_dir', type=str, nargs=1,
@@ -28,6 +28,14 @@ parser.add_argument('checkpoint', type=str,
                     help='path to checkpoint file')
 parser.add_argument('model', type=str, default='MLP', nargs='?',
                     help="model type from 'MLP, 'GCN', 'Attention'. Only MLP is known to work.")
+parser.add_argument('--normalization_layer_removal', type=bool, nargs='?', default=False,
+                    help='True or False')
+parser.add_argument('--max_pool', type=bool, nargs='?', default=False,
+                    help='True or False')
+parser.add_argument('--hidden_layer_removal', type=bool, nargs='?', default=False,
+                    help='True or False')
+parser.add_argument('--conv_layer_removal', type=bool, nargs='?', default=False,
+                    help='True or False')
 
 args = parser.parse_args()
 emb_dir = args.emb_dir[0]
@@ -51,6 +59,7 @@ text_trunc_length = 256
 
 mol_trunc_length = 512 #attention model only
 
+ablation_option = AblationOption(args.normalization_layer_removal, args.max_pool, args.hidden_layer_removal, args.conv_layer_removal)
 
 if MODEL == "MLP":
     gd = GenerateData(text_trunc_length, path_train, path_val, path_test, path_molecules, path_token_embs)
@@ -61,7 +70,7 @@ if MODEL == "MLP":
 
     training_generator, validation_generator, test_generator = get_dataloader(gd, params)
 
-    model = MLPModel(ninp = 768, nhid = 600, nout = 300)
+    model = MLPModel(ninp = 768, nhid = 600, nout = 300, ablation_option = ablation_option)
 
 elif MODEL == "GCN":
     gd = GenerateData(text_trunc_length, path_train, path_val, path_test, path_molecules, path_token_embs)
@@ -74,7 +83,7 @@ elif MODEL == "GCN":
     
     graph_batcher_tr, graph_batcher_val, graph_batcher_test = get_graph_data(gd, graph_data_path)
 
-    model = GCNModel(num_node_features=graph_batcher_tr.dataset.num_node_features, ninp = 768, nhid = 600, nout = 300, graph_hidden_channels = 600)
+    model = GCNModel(num_node_features=graph_batcher_tr.dataset.num_node_features, ninp = 768, nhid = 600, nout = 300, graph_hidden_channels = 600, ablation_option = ablation_option)
 
 elif MODEL == "Attention":
     print('Using the attention model here is not intended behavior.')

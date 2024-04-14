@@ -22,6 +22,8 @@ from dataloaders import get_dataloader, GenerateData, get_graph_data, get_attent
 
 import argparse
 
+from ablation_option import AblationOption
+
 parser = argparse.ArgumentParser(description='Run Text2Mol')
 parser.add_argument('--data', metavar='data', type=str, 
                     help='directory where data is located')
@@ -43,6 +45,14 @@ parser.add_argument('--lr', type=float, nargs='?', default=1e-4,
                     help='learning rate')
 parser.add_argument('--bert_lr', type=float, nargs='?', default=3e-5,
                     help='Size of data batch.')
+parser.add_argument('--normalization_layer_removal', type=bool, nargs='?', default=False,
+                    help='True or False')
+parser.add_argument('--max_pool', type=bool, nargs='?', default=False,
+                    help='True or False')
+parser.add_argument('--hidden_layer_removal', type=bool, nargs='?', default=False,
+                    help='True or False')
+parser.add_argument('--conv_layer_removal', type=bool, nargs='?', default=False,
+                    help='True or False')
 
 args = parser.parse_args()  
 data_path = args.data
@@ -68,7 +78,7 @@ path_molecules = osp.join(data_path, "ChEBI_definitions_substructure_corpus.cp")
 
 graph_data_path = osp.join(data_path, "mol_graphs.zip")
 
-
+ablation_option = AblationOption(args.normalization_layer_removal, args.max_pool, args.hidden_layer_removal, args.conv_layer_removal)
 
 if MODEL == "MLP":
     gd = GenerateData(text_trunc_length, path_train, path_val, path_test, path_molecules, path_token_embs)
@@ -79,7 +89,7 @@ if MODEL == "MLP":
 
     training_generator, validation_generator, test_generator = get_dataloader(gd, params)
 
-    model = MLPModel(ninp = 768, nhid = 600, nout = 300)
+    model = MLPModel(ninp = 768, nhid = 600, nout = 300, ablation_option = ablation_option)
 
 elif MODEL == "GCN":
     gd = GenerateData(text_trunc_length, path_train, path_val, path_test, path_molecules, path_token_embs)
@@ -92,7 +102,8 @@ elif MODEL == "GCN":
     
     graph_batcher_tr, graph_batcher_val, graph_batcher_test = get_graph_data(gd, graph_data_path)
 
-    model = GCNModel(num_node_features=graph_batcher_tr.dataset.num_node_features, ninp = 768, nhid = 600, nout = 300, graph_hidden_channels = 600)
+    model = GCNModel(num_node_features=gragh_batcher_tr.dataset.num_node_features, ninp = 768, nhid = 600, nout = 300, gragh_hidden_channels = 600, ablation_option = ablation_option)
+    
 
 elif MODEL == "Attention":
     gd = GenerateDataAttention(text_trunc_length, path_train, path_val, path_test, path_molecules, path_token_embs)
@@ -345,7 +356,15 @@ else: #Save association rules
     mha_weights = {}
     def get_activation(name):
         def hook(model, input, output):
-            mha_weights[cid] = output[1].cpu().detach().numpy()
+            # print("Output value:", output)
+            # print(f"len(output): {len(output)}")
+            # print(f"output[0].cpu().detach().numpy(): {output[0].cpu().detach().numpy()}")
+            # print(f"output[1]: {output[1]}")
+            # print(f"output[1].cpu().detach().numpy(): {output[1].cpu().detach().numpy()}")
+            if output[0] is not None:
+                mha_weights[cid] = output[0].cpu().detach().numpy()
+            else:
+               print("Attention weights are None for cid:", cid)
         return hook
 
 
@@ -368,12 +387,15 @@ else: #Save association rules
         out = model(text, graph_batch, text_mask, molecule_mask)
         
         #for memory reasons
-        mol_length = graph_batch.x.shape[0]
-        text_input = gd.text_tokenizer(gd.descriptions[cid], truncation=True, padding = 'max_length', 
+        if cid in mha_weights:
+            mol_length = graph_batch.x.shape[0]
+            text_input = gd.text_tokenizer(gd.descriptions[cid], truncation=True, padding = 'max_length', 
                                             max_length=gd.text_trunc_length - 1)
-        text_length = np.sum(text_input['attention_mask'])
+            text_length = np.sum(text_input['attention_mask'])
         
-        mha_weights[cid] = mha_weights[cid][0,:text_length, :mol_length]
+            mha_weights[cid] = mha_weights[cid][0,:text_length, :mol_length]
+        else:
+            print(f"Skipping cid {cid} as attention weights are not available.")
 
         if (i+1) % 1000 == 0: print("Training sample", i+1, "attention extracted.")
 
