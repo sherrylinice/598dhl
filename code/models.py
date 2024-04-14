@@ -66,7 +66,7 @@ class MLPModel(nn.Module):
         x = self.relu(self.mol_hidden1(molecule))
 
         # Ablation study: adding dropout. 
-        if ablation_option.add_dropout:
+        if self.ablation_option.add_dropout:
             x = self.dropout(x)
         
         # Ablation study: Reducing the number of hidden layers of the molecule encoder. 
