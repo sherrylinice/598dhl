@@ -91,7 +91,7 @@ class GenerateData():
         self.descriptions[line['cid']] = line['desc']
         self.mols[line['cid']] = line['mol2vec']
         self.validation_cids.append(line['cid'])
-    #self.validation_cids_sample  = random.sample(self.validation_cids, int(len(self.validation_cids)/2))
+    #self.validation_cids_sample  = random.sample(self.validation_cids, int(len(self.validation_cids)//20))
     self.validation_cids_sample = self.validation_cids
 
     self.test_cids = []
@@ -102,7 +102,7 @@ class GenerateData():
         self.descriptions[line['cid']] = line['desc']
         self.mols[line['cid']] = line['mol2vec']
         self.test_cids.append(line['cid'])
-    # self.test_cids_sample  = random.sample(self.test_cids, int(len(self.test_cids)/2))
+    #self.test_cids_sample  = random.sample(self.test_cids, int(len(self.test_cids)//20))
     self.test_cids_sample  = self.test_cids
 
 
