@@ -45,6 +45,16 @@ parser.add_argument('--lr', type=float, nargs='?', default=1e-4,
                     help='learning rate')
 parser.add_argument('--bert_lr', type=float, nargs='?', default=3e-5,
                     help='Size of data batch.')
+parser.add_argument('--normalization_layer_removal', type=bool, nargs='?', default=False,
+                    help='True or False')
+parser.add_argument('--max_pool', type=bool, nargs='?', default=False,
+                    help='True or False')
+parser.add_argument('--hidden_layer_removal', type=bool, nargs='?', default=False,
+                    help='True or False')
+parser.add_argument('--conv_layer_removal', type=bool, nargs='?', default=False,
+                    help='True or False')
+parser.add_argument('--add_dropout', type=bool, nargs='?', default=False,
+                    help='True or False')
 
 args = parser.parse_args()  
 data_path = args.data
