@@ -5,7 +5,7 @@
 Sherry Li (xuehail2@illinois.edu), Jo Yang (jiaoy2@illinois.edu)
 
 ## Project Draft Jupyter Notebook:  
-[DL4H_Team_21.ipynb](https://github.com/sherrylinice/598dhl/blob/main/DL4H_Team_21.ipynb](https://github.com/sherrylinice/598dhl/blob/main/DL4H_Team_21%20(2).ipynb)
+[DL4H_Team_21.ipynb](https://github.com/sherrylinice/598dhl/blob/main/DL4H_Team_21%20(2).ipynb)
 
 ## Text2Mol
 
