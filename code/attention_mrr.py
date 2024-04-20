@@ -520,8 +520,57 @@ def ar_score(text_cid, mol_cid, top_num=10):
 
   return np.mean(top_confs)
 
-# calculate alpha using validataion dataset, alpha = 0
+# calculate ar_scores using alpha = 0
+
+alpha = 0.0
+
+
 ar_scores = np.zeros((len(top_cids_val1), num_top))
+
+new_ranks_val = []
+for i, cid in enumerate(top_cids_val1):
+
+  text_input = gt.text_tokenizer(gt.descriptions[cid], truncation=True, padding = 'max_length',
+                                    max_length=gt.text_trunc_length - 1)
+  text_length = np.sum(text_input['attention_mask'])
+  text_tokens = gt.text_tokenizer.convert_ids_to_tokens(text_input['input_ids'][:text_length])
+
+  score = np.zeros((num_top))
+  for j, cid2 in enumerate(top_cids_val1[cid]):
+    gfile = archive.open(cid + '.graph').read().decode('ascii')
+    mol_tokens = {}
+    idx = False
+    for line in gfile.split('\n'):
+      line = line.strip()
+      if line == 'idx to identifier:':
+        idx = True
+        continue
+      if idx and len(line) != 0:
+        id, idf = line.split(" ")
+        mol_tokens[id] = idf
+    mol_tokens = list(mol_tokens.values())
+
+    tmp = ar_score(cid, cid2)
+    ar_scores[i,j] = tmp
+    score[j] = alpha * scores_val1[cid][j] + (1 - alpha) * tmp
+
+  try:
+    old_loc = top_cids_val1[cid].index(cid)
+
+    sorted = np.argsort(-score, kind='stable')
+
+    new_rank = np.where(sorted == old_loc)[0][0] + 1
+
+  except ValueError:
+    new_rank = ranks_val1[i]
+
+  new_ranks_val.append(new_rank)
+
+
+  if (i+1) % 200 == 0: print(i+1)
+
+new_ranks_val = np.array(new_ranks_val)
+
 
 # alpha 0 - 101
 x = np.linspace(0.0,1,101)
@@ -543,8 +592,8 @@ for n in x:
 
     score = np.zeros((num_top))
     for j, cid2 in enumerate(top_cids_val1[cid]):
-      tmp = ar_score(cid, cid2)
-      ar_scores[i,j] = tmp
+      # tmp = ar_score(cid, cid2)
+      # ar_scores[i,j] = tmp
       score[j] = alpha * scores_val1[cid][j] + (1 - alpha) * ar_scores[i,j]
 
     try:
