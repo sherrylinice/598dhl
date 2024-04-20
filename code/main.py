@@ -55,6 +55,8 @@ parser.add_argument('--conv_layer_removal', type=bool, nargs='?', default=False,
                     help='True or False')
 parser.add_argument('--add_dropout', type=bool, nargs='?', default=False,
                     help='True or False')
+parser.add_argument('--sample', type=bool, nargs='?', default=False,
+                    help='True or False')
 
 args = parser.parse_args()  
 data_path = args.data
@@ -71,6 +73,7 @@ text_trunc_length = args.text_trunc_length
 
 mol_trunc_length = args.mol_trunc_length #attention model only
 
+sample = args.sample
 
 path_token_embs = osp.join(data_path, "token_embedding_dict.npy")
 path_train = osp.join(data_path, "training.txt")
@@ -108,7 +111,7 @@ elif MODEL == "GCN":
     
 
 elif MODEL == "Attention":
-    gd = GenerateDataAttention(text_trunc_length, path_train, path_val, path_test, path_molecules, path_token_embs)
+    gd = GenerateDataAttention(text_trunc_length, path_train, path_val, path_test, path_molecules, path_token_embs, sample)
 
     # Parameters
     params = {'batch_size': BATCH_SIZE,
@@ -395,7 +398,7 @@ else: #Save association rules
                                             max_length=gd.text_trunc_length - 1)
             text_length = np.sum(text_input['attention_mask'])
         
-            mha_weights[cid] = mha_weights[cid][0,:text_length, :mol_length]
+            mha_weights[cid] = mha_weights[cid][:text_length, 0, :mol_length]
         else:
             print(f"Skipping cid {cid} as attention weights are not available.")
 
@@ -422,7 +425,7 @@ else: #Save association rules
         text_input = gd.text_tokenizer(gd.descriptions[cid], truncation=True, padding = 'max_length', 
                                             max_length=gd.text_trunc_length - 1)
         text_length = np.sum(text_input['attention_mask'])
-        mha_weights[cid] = mha_weights[cid][0,:text_length, :mol_length]
+        mha_weights[cid] = mha_weights[cid][:text_length, 0, :mol_length]
 
     
         if (i+1) % 1000 == 0: print("Validation sample", i+1, "attention extracted.")
@@ -448,7 +451,7 @@ else: #Save association rules
         text_input = gd.text_tokenizer(gd.descriptions[cid], truncation=True, padding = 'max_length', 
                                             max_length=gd.text_trunc_length - 1)
         text_length = np.sum(text_input['attention_mask'])
-        mha_weights[cid] = mha_weights[cid][0,:text_length, :mol_length]
+        mha_weights[cid] = mha_weights[cid][:text_length, 0, :mol_length]
 
     
         if (i+1) % 1000 == 0: print("Test sample", i+1, "attention extracted.")
