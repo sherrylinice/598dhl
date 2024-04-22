@@ -58,7 +58,7 @@ parser.add_argument('--add_dropout', type=bool, nargs='?', default=False,
 parser.add_argument('--change_loss', type=bool, nargs='?', default=False,
                     help='True or False')
 parser.add_argument('--sample', type=bool, nargs='?', default=False,
-                    help='True or False')
+                                        help='True or False')
 
 args = parser.parse_args()  
 data_path = args.data
