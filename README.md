@@ -46,7 +46,6 @@ For ranker_threshold.py:
 | dataloaders.py   | Code for loading the data.        |
 | ablation_option.py   | The ablation options included in this project draft.        |
 | dataloaders_length_ablation.py   | Additional ablation study.        |
-| main_loss_ablation.py   | Additional ablation study.        |
 | main_sample.py   | Use a small sample for testing.        |
 | attention_mrr.py | Metrics calculation for the attention model.        |
 | attention_weights_recalc.py | Recalculate attention weights from an attention model checkpoint.        |
@@ -81,7 +80,7 @@ To plot cosine score vs ranking:
 To run ablation study: 
 > python code/main.py --data data --output_path test_output --model MLP --epochs 40 --batch_size 32 --normalization_layer_removal True
 
-Ablation args include : normalization_layer_removal, max_pool, hidden_layer_removal, conv_layer_removal, add_dropout.
+Ablation args include : normalization_layer_removal, max_pool, hidden_layer_removal, conv_layer_removal, add_dropout, change_loss.
 
 To calculate metrics for the attention model:
 > python code/attention_mrr.py --weights_dir test_output/attention_test --embeddings_dir embeddings/
