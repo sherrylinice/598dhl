@@ -78,7 +78,7 @@ graph_data_path = osp.join(data_path, "mol_graphs.zip")
 ablation_option = AblationOption(args.normalization_layer_removal, args.max_pool, args.hidden_layer_removal, args.conv_layer_removal, args.add_dropout)
 
 if MODEL == "MLP":
-    gd = GenerateData(text_trunc_length, path_train, path_val, path_test, path_molecules, path_token_embs)
+    gd = GenerateData(text_trunc_length, path_train, path_val, path_test, path_molecules, path_token_embs, sample)
 
     # Parameters
     params = {'batch_size': BATCH_SIZE,
