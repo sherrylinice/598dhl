@@ -4,8 +4,9 @@
 
 Sherry Li (xuehail2@illinois.edu), Jo Yang (jiaoy2@illinois.edu)
 
-## Project Draft Jupyter Notebook:  
-[DL4H_Team_21.ipynb](https://github.com/sherrylinice/598dhl/blob/main/DL4H_Team_21.ipynb)
+## Project Draft Jupyter Notebook
+
+Please find our project draft Jupyter notebook here: [DL4H_Team_21.ipynb](https://github.com/sherrylinice/598dhl/blob/main/DL4H_Team_21%20(2).ipynb), and refer to the provided instructions before running it: [instruction doc for running DL4H_Team_21.ipynb](https://github.com/sherrylinice/598dhl/blob/f011712ec4e8754a0ce2969d6873fa31c8304e68/Instruction%20to%20run%20DL4H_Team21.ipynb%20(1).docx). Your feedback and questions are welcomed!
 
 ## Text2Mol
 
@@ -81,6 +82,9 @@ To run ablation study:
 > python code/main.py --data data --output_path test_output --model MLP --epochs 40 --batch_size 32 --normalization_layer_removal True
 
 Ablation args include : normalization_layer_removal, max_pool, hidden_layer_removal, conv_layer_removal, add_dropout, change_loss.
+
+To calculate metrics for the attention model:
+> python code/attention_mrr.py --weights_dir test_output/attention_test --embeddings_dir embeddings/
 
 To calculate metrics for the attention model:
 > python code/attention_mrr.py --weights_dir test_output/attention_test --embeddings_dir embeddings/
