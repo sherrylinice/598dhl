@@ -582,7 +582,7 @@ hits10 = []
 for n in x:
   
   alpha = n
-  print("alpha:", alpha)
+  # print("alpha:", alpha)
   hits_at_one = 0
   hits_at_ten = 0
   hits_at_100 = 0
@@ -614,7 +614,7 @@ for n in x:
         hits_at_ten += 1
     if new_rank <= 100:
         hits_at_100 += 1
-  print("MRR", np.mean(1/np.array(tmp_ranks)))
+  print("alpha:", alpha, ", MRR:", np.mean(1/np.array(tmp_ranks)))
 
   MRRs.append(np.mean(1/np.array(tmp_ranks)))
   hits1.append(hits_at_one/cids_val1.size)
