@@ -28,6 +28,7 @@ class GenerateData():
     self.path_token_embs = path_token_embs
 
     self.text_trunc_length = text_trunc_length 
+    # self.sample = sample
 
     self.prep_text_tokenizer()
 
@@ -80,8 +81,9 @@ class GenerateData():
         self.training_cids.append(line['cid'])
     # sample 50% from the training_cids
     #random.seed(0)
-    #self.training_cids_sample  = random.sample(self.training_cids, int(len(self.training_cids)/2))
-    self.training_cids_sample = self.training_cids
+    # if self.sample == True:
+    #   self.training_cids = random.sample(self.training_cids, int(len(self.training_cids)/10))
+    # self.training_cids_sample = self.training_cids
         
     self.validation_cids = []
     #get validation set cids...
@@ -91,9 +93,9 @@ class GenerateData():
         self.descriptions[line['cid']] = line['desc']
         self.mols[line['cid']] = line['mol2vec']
         self.validation_cids.append(line['cid'])
-
-    #self.validation_cids_sample  = random.sample(self.validation_cids, int(len(self.validation_cids)/2))
-    self.validation_cids_sample = self.validation_cids
+    # if self.sample == True:
+    #   self.validation_cids  = random.sample(self.validation_cids, int(len(self.validation_cids)/10))
+    # self.validation_cids_sample = self.validation_cids
 
     self.test_cids = []
     #get test set cids...
@@ -103,7 +105,8 @@ class GenerateData():
         self.descriptions[line['cid']] = line['desc']
         self.mols[line['cid']] = line['mol2vec']
         self.test_cids.append(line['cid'])
-
+    # if self.sample == True:
+    #   self.test_cids  = random.sample(self.test_cids, int(len(self.test_cids)/10))
     # self.test_cids_sample  = random.sample(self.test_cids, int(len(self.test_cids)/2))
 
     self.test_cids_sample  = self.test_cids
@@ -381,7 +384,7 @@ def get_graph_data(data_generator, graph_data_path):
 
 
 class GenerateDataAttention():
-  def __init__(self, text_trunc_length, path_train, path_val, path_test, path_molecules, path_token_embs):
+  def __init__(self, text_trunc_length, path_train, path_val, path_test, path_molecules, path_token_embs, sample):
     self.path_train = path_train
     self.path_val = path_val
     self.path_test = path_test
@@ -389,6 +392,8 @@ class GenerateDataAttention():
     self.path_token_embs = path_token_embs
 
     self.text_trunc_length = text_trunc_length 
+
+    self.sample = sample
 
     self.prep_text_tokenizer()
     
@@ -438,7 +443,10 @@ class GenerateDataAttention():
         self.descriptions[line['cid']] = line['desc']
         self.mols[line['cid']] = line['mol2vec']
         self.training_cids.append(line['cid'])
-        
+
+    if self.sample == True:
+          self.training_cids  = random.sample(self.training_cids, int(len(self.training_cids)/10))
+
     self.validation_cids = []
     #get validation set cids...
     with open(self.path_val) as f:
@@ -447,6 +455,9 @@ class GenerateDataAttention():
         self.descriptions[line['cid']] = line['desc']
         self.mols[line['cid']] = line['mol2vec']
         self.validation_cids.append(line['cid'])
+
+    if self.sample == True:
+          self.validation_cids  = random.sample(self.validation_cids, int(len(self.validation_cids)/10))    
         
     self.test_cids = []
     with open(self.path_test) as f:
@@ -455,6 +466,9 @@ class GenerateDataAttention():
         self.descriptions[line['cid']] = line['desc']
         self.mols[line['cid']] = line['mol2vec']
         self.test_cids.append(line['cid'])
+
+    if self.sample == True:
+          self.test_cids  = random.sample(self.test_cids, int(len(self.test_cids)/10))
 
   #transformers can't take array with full attention so have to pad a 0...
   def padarray(self, A, size, value=0):

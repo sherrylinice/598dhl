@@ -49,6 +49,8 @@ For ranker_threshold.py:
 | dataloaders_length_ablation.py   | Additional ablation study.        |
 | main_loss_ablation.py   | Additional ablation study.        |
 | main_sample.py   | Use a small sample for testing.        |
+| attention_mrr.py | Metrics calculation for the attention model.        |
+| attention_weights_recalc.py | Recalculate attention weights from an attention model checkpoint.        |
 | requirements.yml   | Requirement files.        |
 | notebooks   | Jupyter Notebooks/Google Collab implementations.        |
 
