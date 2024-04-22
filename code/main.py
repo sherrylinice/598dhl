@@ -15,7 +15,7 @@ import torch.optim as optim
 from transformers.optimization import get_linear_schedule_with_warmup
 
 
-from losses import contrastive_loss, negative_sampling_contrastive_loss
+from losses import contrastive_loss, negative_sampling_contrastive_loss, naive_loss
 from models import MLPModel, GCNModel, AttentionModel
 from dataloaders import get_dataloader, GenerateData, get_graph_data, get_attention_graph_data, GenerateDataAttention, get_attention_dataloader
 
@@ -55,6 +55,8 @@ parser.add_argument('--conv_layer_removal', type=bool, nargs='?', default=False,
                     help='True or False')
 parser.add_argument('--add_dropout', type=bool, nargs='?', default=False,
                     help='True or False')
+parser.add_argument('--change_loss', type=bool, nargs='?', default=False,
+                    help='True or False')
 parser.add_argument('--sample', type=bool, nargs='?', default=False,
                     help='True or False')
 
@@ -83,7 +85,7 @@ path_molecules = osp.join(data_path, "ChEBI_definitions_substructure_corpus.cp")
 
 graph_data_path = osp.join(data_path, "mol_graphs.zip")
 
-ablation_option = AblationOption(args.normalization_layer_removal, args.max_pool, args.hidden_layer_removal, args.conv_layer_removal, args.add_dropout)
+ablation_option = AblationOption(args.normalization_layer_removal, args.max_pool, args.hidden_layer_removal, args.conv_layer_removal, args.add_dropout, args.change_loss)
 
 if MODEL == "MLP":
     gd = GenerateData(text_trunc_length, path_train, path_val, path_test, path_molecules, path_token_embs)
@@ -233,6 +235,8 @@ for epoch in range(epochs):
                 text_out, chem_out = model(text, molecule, text_mask)
         
                 loss = contrastive_loss(text_out, chem_out).to(device)
+                if ablation_option.change_loss:
+                    loss = naive_loss(text_out, chem_out).to(device)
                 running_loss += loss.item()
             elif MODEL == "GCN":
                 graph_batch = graph_batcher_val(d[0]['molecule']['cid']).to(device)
