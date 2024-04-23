@@ -20,7 +20,7 @@ from torch_geometric.data import Data, Batch
 #Need a special generator for random sampling:
 
 class GenerateData():
-  def __init__(self, text_trunc_length, path_train, path_val, path_test, path_molecules, path_token_embs):
+  def __init__(self, text_trunc_length, path_train, path_val, path_test, path_molecules, path_token_embs, text_length_ablation):
     self.path_train = path_train
     self.path_val = path_val
     self.path_test = path_test
@@ -28,6 +28,7 @@ class GenerateData():
     self.path_token_embs = path_token_embs
 
     self.text_trunc_length = text_trunc_length 
+    self.text_length_ablation = text_length_ablation
     # self.sample = sample
 
     self.prep_text_tokenizer()
@@ -76,9 +77,20 @@ class GenerateData():
     with open(self.path_train) as f:
       reader = csv.DictReader(f, delimiter="\t", quoting=csv.QUOTE_NONE, fieldnames = ['cid', 'mol2vec', 'desc'])
       for n, line in enumerate(reader):
-        self.descriptions[line['cid']] = line['desc']
-        self.mols[line['cid']] = line['mol2vec']
-        self.training_cids.append(line['cid'])
+        if self.text_length_ablation == "long":
+          if len(line['desc']) > 300:
+            self.descriptions[line['cid']] = line['desc']
+            self.mols[line['cid']] = line['mol2vec']
+            self.training_cids.append(line['cid'])
+        elif self.text_length_ablation == "short":
+          if len(line['desc']) <= 300:            
+            self.descriptions[line['cid']] = line['desc']
+            self.mols[line['cid']] = line['mol2vec']
+            self.training_cids.append(line['cid'])    
+        else:  
+            self.descriptions[line['cid']] = line['desc']
+            self.mols[line['cid']] = line['mol2vec']
+            self.training_cids.append(line['cid'])      
     # sample 50% from the training_cids
     #random.seed(0)
     # if self.sample == True:
@@ -90,9 +102,20 @@ class GenerateData():
     with open(self.path_val) as f:
       reader = csv.DictReader(f, delimiter="\t", quoting=csv.QUOTE_NONE, fieldnames = ['cid', 'mol2vec', 'desc'])
       for n, line in enumerate(reader):
-        self.descriptions[line['cid']] = line['desc']
-        self.mols[line['cid']] = line['mol2vec']
-        self.validation_cids.append(line['cid'])
+        if self.text_length_ablation == "long":
+          if len(line['desc']) > 300:
+            self.descriptions[line['cid']] = line['desc']
+            self.mols[line['cid']] = line['mol2vec']
+            self.validation_cids.append(line['cid'])
+        elif self.text_length_ablation == "short":
+          if len(line['desc']) <= 300:            
+            self.descriptions[line['cid']] = line['desc']
+            self.mols[line['cid']] = line['mol2vec']
+            self.validation_cids.append(line['cid'])    
+        else:  
+            self.descriptions[line['cid']] = line['desc']
+            self.mols[line['cid']] = line['mol2vec']
+            self.validation_cids.append(line['cid'])         
     # if self.sample == True:
     #   self.validation_cids  = random.sample(self.validation_cids, int(len(self.validation_cids)/10))
     # self.validation_cids_sample = self.validation_cids
@@ -102,9 +125,20 @@ class GenerateData():
     with open(self.path_test) as f:
       reader = csv.DictReader(f, delimiter="\t", quoting=csv.QUOTE_NONE, fieldnames = ['cid', 'mol2vec', 'desc'])
       for n, line in enumerate(reader):
-        self.descriptions[line['cid']] = line['desc']
-        self.mols[line['cid']] = line['mol2vec']
-        self.test_cids.append(line['cid'])
+        if self.text_length_ablation == "long":
+          if len(line['desc']) > 300:
+            self.descriptions[line['cid']] = line['desc']
+            self.mols[line['cid']] = line['mol2vec']
+            self.test_cids.append(line['cid'])
+        elif self.text_length_ablation == "short":
+          if len(line['desc']) <= 300:            
+            self.descriptions[line['cid']] = line['desc']
+            self.mols[line['cid']] = line['mol2vec']
+            self.test_cids.append(line['cid'])    
+        else:  
+            self.descriptions[line['cid']] = line['desc']
+            self.mols[line['cid']] = line['mol2vec']
+            self.test_cids.append(line['cid'])   
     # if self.sample == True:
     #   self.test_cids  = random.sample(self.test_cids, int(len(self.test_cids)/10))
     # self.test_cids_sample  = random.sample(self.test_cids, int(len(self.test_cids)/2))
