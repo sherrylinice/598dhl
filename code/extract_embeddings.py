@@ -55,6 +55,12 @@ parser.add_argument('--conv_layer_removal', type=bool, nargs='?', default=False,
                     help='True or False')
 parser.add_argument('--add_dropout', type=bool, nargs='?', default=False,
                     help='True or False')
+parser.add_argument('--change_loss', type=bool, nargs='?', default=False,
+                    help='True or False')
+parser.add_argument('--text_length_ablation', type=str, nargs='?', default="none",
+                    help='long, short or none')
+parser.add_argument('--sample', type=bool, nargs='?', default=False,
+                                        help='True or False')
 
 args = parser.parse_args()
 data_path = args.data
@@ -63,9 +69,17 @@ CHECKPOINT = args.checkpoint
 MODEL = args.model
 
 BATCH_SIZE = args.batch_size
+epochs = args.epochs
+
+init_lr = args.lr
+bert_lr = args.bert_lr
+num_warmup_steps = args.num_warmup_steps
+text_trunc_length = args.text_trunc_length
 
 text_trunc_length = args.text_trunc_length
 mol_trunc_length = args.mol_trunc_length #attention model only
+
+sample = args.sample #attention model only
 
 path_token_embs = osp.join(data_path, "token_embedding_dict.npy")
 path_train = osp.join(data_path, "training.txt")
@@ -75,10 +89,10 @@ path_molecules = osp.join(data_path, "ChEBI_defintions_substructure_corpus.cp")
 
 graph_data_path = osp.join(data_path, "mol_graphs.zip")
 
-ablation_option = AblationOption(args.normalization_layer_removal, args.max_pool, args.hidden_layer_removal, args.conv_layer_removal, args.add_dropout)
+ablation_option = AblationOption(args.normalization_layer_removal, args.max_pool, args.hidden_layer_removal, args.conv_layer_removal, args.add_dropout, args.change_loss, args.text_length_ablation)
 
 if MODEL == "MLP":
-    gd = GenerateData(text_trunc_length, path_train, path_val, path_test, path_molecules, path_token_embs, sample)
+    gd = GenerateData(text_trunc_length, path_train, path_val, path_test, path_molecules, path_token_embs, ablation_option.text_length_ablation)
 
     # Parameters
     params = {'batch_size': BATCH_SIZE,
@@ -102,7 +116,7 @@ elif MODEL == "GCN":
     model = GCNModel(num_node_features=graph_batcher_tr.dataset.num_node_features, ninp = 768, nhid = 600, nout = 300, graph_hidden_channels = 600, ablation_option = ablation_option)
 
 elif MODEL == "Attention":
-    gd = GenerateDataAttention(text_trunc_length, path_train, path_val, path_test, path_molecules, path_token_embs)
+    gd = GenerateDataAttention(text_trunc_length, path_train, path_val, path_test, path_molecules, path_token_embs, sample)
 
     # Parameters
     params = {'batch_size': BATCH_SIZE,

@@ -57,6 +57,8 @@ parser.add_argument('--add_dropout', type=bool, nargs='?', default=False,
                     help='True or False')
 parser.add_argument('--change_loss', type=bool, nargs='?', default=False,
                     help='True or False')
+parser.add_argument('--text_length_ablation', type=str, nargs='?', default="none",
+                    help='long, short or none')
 parser.add_argument('--sample', type=bool, nargs='?', default=False,
                                         help='True or False')
 
@@ -85,10 +87,10 @@ path_molecules = osp.join(data_path, "ChEBI_definitions_substructure_corpus.cp")
 
 graph_data_path = osp.join(data_path, "mol_graphs.zip")
 
-ablation_option = AblationOption(args.normalization_layer_removal, args.max_pool, args.hidden_layer_removal, args.conv_layer_removal, args.add_dropout, args.change_loss)
+ablation_option = AblationOption(args.normalization_layer_removal, args.max_pool, args.hidden_layer_removal, args.conv_layer_removal, args.add_dropout, args.change_loss, args.text_length_ablation)
 
 if MODEL == "MLP":
-    gd = GenerateData(text_trunc_length, path_train, path_val, path_test, path_molecules, path_token_embs)
+    gd = GenerateData(text_trunc_length, path_train, path_val, path_test, path_molecules, path_token_embs, ablation_option.text_length_ablation)
 
     # Parameters
     params = {'batch_size': BATCH_SIZE,
