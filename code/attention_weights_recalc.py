@@ -16,7 +16,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 import torch
 from torch import nn
-import torch.nn.functional as F
+import torch.nn.functional as F 
 from torch.nn import Transformer
 from torch.utils.data import Dataset, DataLoader
 from torch.nn import TransformerEncoder, TransformerEncoderLayer, TransformerDecoder, TransformerDecoderLayer
@@ -38,7 +38,16 @@ from torch_geometric.nn import GCNConv
 from torch_geometric.nn import global_mean_pool
 
 #Need a special generator for random sampling:
+import argparse
 
+parser = argparse.ArgumentParser(description='Run attention weights recalculation')
+
+parser.add_argument('--checkpoint', metavar='checkpoint', type=str, 
+                    help='directory where checkpoint is located')
+
+
+args = parser.parse_args()  
+CHECKPOINT = args.checkpoint #'checkpoint/attention_checkpoint.pt'
 
 class GenerateData():
   def __init__(self, path_train, path_val, path_test, path_molecules, path_token_embs):
@@ -229,7 +238,6 @@ class GenerateData():
           },
           'label': label
       }
-
 
 
 mounted_path_token_embs = "data/token_embedding_dict.npy"
@@ -517,8 +525,6 @@ ntoken = gt.text_tokenizer.vocab_size
 model = Model(ntoken = ntoken, ninp = 768, nout = 300, nhead = 8, nhid = 512, nlayers = 3, graph_hidden_channels = 768, mol_trunc_length=mol_trunc_length)
 
 
-CHECKPOINT = 'checkpoint/attention_checkpoint.pt'
-
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 model.load_state_dict(torch.load(CHECKPOINT, map_location=device), strict=False)
 
@@ -531,7 +537,7 @@ mha_weights = {}
 def get_activation(name):
     def hook(model, input, output):
         if output[0] is not None:
-            # print(output[0], output[1])
+        #     # print(output[0], output[1])
             mha_weights[cid] = output[0].cpu().detach().numpy()
         else:
             print("Attention weights are None for cid:", cid)
