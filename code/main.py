@@ -372,14 +372,40 @@ else: #Save association rules
             # print(f"output[0].cpu().detach().numpy(): {output[0].cpu().detach().numpy()}")
             # print(f"output[1]: {output[1]}")
             # print(f"output[1].cpu().detach().numpy(): {output[1].cpu().detach().numpy()}")
-            if output[0] is not None:
-                mha_weights[cid] = output[0].cpu().detach().numpy()
-            else:
-               print("Attention weights are None for cid:", cid)
+            # if output[0] is not None:
+            #     mha_weights[cid] = output[0].cpu().detach().numpy()
+            # else:
+            #    print("Attention weights are None for cid:", cid)
+            mha_weights[cid] = output[1].cpu().detach().numpy()        
         return hook
 
 
     handle = last_decoder.multihead_attn.register_forward_hook(get_activation(''))
+
+    # https://gist.github.com/airalcorn2/50ec06517ce96ecc143503e21fa6cb91
+    def patch_attention(m):
+        forward_orig = m.forward
+
+        def wrap(*args, **kwargs):
+            kwargs["need_weights"] = True
+            kwargs["average_attn_weights"] = True
+
+            return forward_orig(*args, **kwargs)
+
+        m.forward = wrap
+
+
+    class SaveOutput:
+        def __init__(self):
+            self.outputs = []
+
+        def __call__(self, module, module_in, module_out):
+            self.outputs.append(module_out[1])
+
+        def clear(self):
+            self.outputs = []
+
+    patch_attention(model.text_transformer_decoder.layers[-1].multihead_attn)
 
     #Go through data to actually get the rules
     for i,d in enumerate(gd.generate_examples_train()):
