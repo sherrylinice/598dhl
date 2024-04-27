@@ -110,7 +110,7 @@ class GenerateData():
         self.mols[line['cid']] = line['mol2vec']
         self.training_cids.append(line['cid'])
 
-    self.training_cids_sample  = random.sample(self.training_cids, int(len(self.training_cids)/10))
+    # self.training_cids_sample  = random.sample(self.training_cids, int(len(self.training_cids)/10))
 
     self.validation_cids = []
     #get validation set cids...
@@ -120,7 +120,7 @@ class GenerateData():
         self.descriptions[line['cid']] = line['desc']
         self.mols[line['cid']] = line['mol2vec']
         self.validation_cids.append(line['cid'])
-    self.validation_cids  = random.sample(self.validation_cids, int(len(self.validation_cids)/10))
+    # self.validation_cids  = random.sample(self.validation_cids, int(len(self.validation_cids)/10))
 
     self.test_cids = []
     with open(self.path_test) as f:
@@ -129,7 +129,7 @@ class GenerateData():
         self.descriptions[line['cid']] = line['desc']
         self.mols[line['cid']] = line['mol2vec']
         self.test_cids.append(line['cid'])
-    self.test_cids  = random.sample(self.test_cids, int(len(self.test_cids)/10))
+    # self.test_cids  = random.sample(self.test_cids, int(len(self.test_cids)/10))
 
   #transformers can't take array with full attention so have to pad a 0...
   def padarray(self, A, size, value=0):
@@ -277,8 +277,11 @@ class Dataset(Dataset):
       return X, y
 
 training_set = Dataset(gt.generate_examples_train, len(gt.training_cids))
+print(f"training_data: {len(gt.training_cids)} records")
 validation_set = Dataset(gt.generate_examples_val, len(gt.validation_cids))
+print(f"validation_data: {len(gt.validation_cids)} records")
 test_set = Dataset(gt.generate_examples_test, len(gt.test_cids))
+print(f"test_data: {len(gt.test_cids)} records")
 
 # Parameters
 params = {'batch_size': gt.batch_size,
@@ -311,13 +314,13 @@ class MoleculeGraphDataset(GeoDataset):
     def processed_file_names(self):
         return ['data_{}.pt'.format(cid) for cid in self.cids]
 
-    def download(self):
-        # Download to `self.raw_dir`.
-        print('raw_dir_1', self.raw_dir)
-        print(osp.join(self.raw_dir, "mol_graphs.zip"))
-        print(osp.exists(osp.join(self.raw_dir, "mol_graphs.zip")))
-        if not osp.exists(osp.join(self.raw_dir, "mol_graphs.zip")):
-            shutil.copy(self.data_path, os.path.join(self.raw_dir, "mol_graphs.zip"))
+    # def download(self):
+    #     # Download to `self.raw_dir`.
+    #     print('raw_dir_1', self.raw_dir)
+    #     print(osp.join(self.raw_dir, "mol_graphs.zip"))
+    #     print(osp.exists(osp.join(self.raw_dir, "mol_graphs.zip")))
+    #     if not osp.exists(osp.join(self.raw_dir, "mol_graphs.zip")):
+    #         shutil.copy(self.data_path, os.path.join(self.raw_dir, "mol_graphs.zip"))
 
     def process_graph(self, raw_path):
       edge_index  = []
@@ -343,9 +346,9 @@ class MoleculeGraphDataset(GeoDataset):
 
 
     def process(self):
-        print('raw_dir', self.raw_dir)
-        with zipfile.ZipFile(os.path.join(self.raw_dir, "mol_graphs.zip"), 'r') as zip_ref:
-            zip_ref.extractall(self.raw_dir)
+        # print('raw_dir', self.raw_dir)
+        # with zipfile.ZipFile(os.path.join(self.raw_dir, "mol_graphs.zip"), 'r') as zip_ref:
+        #     zip_ref.extractall(self.raw_dir)
 
 
         i = 0
@@ -353,17 +356,20 @@ class MoleculeGraphDataset(GeoDataset):
             # Read data from `raw_path`.
 
             cid = int(raw_path.split('/')[-1][:-6])
+            # check if file exists
+            check_file = os.path.isfile(osp.join(self.processed_dir, 'data_{}.pt'.format(cid)))
+            if not check_file:
+              print(f'Processing for cid {cid}')
+              edge_index, x = self.process_graph(raw_path)
+              data = Data(x=x, edge_index = edge_index)
 
-            edge_index, x = self.process_graph(raw_path)
-            data = Data(x=x, edge_index = edge_index)
+              if self.pre_filter is not None and not self.pre_filter(data):
+                  continue
 
-            if self.pre_filter is not None and not self.pre_filter(data):
-                continue
+              if self.pre_transform is not None:
+                  data = self.pre_transform(data)
 
-            if self.pre_transform is not None:
-                data = self.pre_transform(data)
-
-            torch.save(data, osp.join(self.processed_dir, 'data_{}.pt'.format(cid)))
+              torch.save(data, osp.join(self.processed_dir, 'data_{}.pt'.format(cid)))
             i += 1
 
     def len(self):
@@ -418,13 +424,19 @@ if not os.path.exists(root):
 
 
 mg_data_tr = MoleculeGraphDataset(root, gt.training_cids, graph_data_path, gt)
+print("Training molecule graph done!")
 graph_batcher_tr = CustomGraphCollater(mg_data_tr, gt.mol_trunc_length)
+print("Training collater done!")
 
 mg_data_val = MoleculeGraphDataset(root, gt.validation_cids, graph_data_path, gt)
+print("Validation molecule graph done!")
 graph_batcher_val = CustomGraphCollater(mg_data_val, gt.mol_trunc_length)
+print("Validation collater graph done!")
 
 mg_data_test = MoleculeGraphDataset(root, gt.test_cids, graph_data_path, gt)
+print("Testing molecule graph done!")
 graph_batcher_test = CustomGraphCollater(mg_data_test, gt.mol_trunc_length)
+print("Testing collater graph done!")
 
 class Model(nn.Module):
 
@@ -526,6 +538,7 @@ model = Model(ntoken = ntoken, ninp = 768, nout = 300, nhead = 8, nhid = 512, nl
 
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+print(device)
 model.load_state_dict(torch.load(CHECKPOINT, map_location=device), strict=False)
 
 model.eval()
@@ -536,15 +549,39 @@ last_decoder = model.text_transformer_decoder.layers[-1]
 mha_weights = {}
 def get_activation(name):
     def hook(model, input, output):
-        if output[0] is not None:
+        # if output[0] is not None:
         #     # print(output[0], output[1])
-            mha_weights[cid] = output[0].cpu().detach().numpy()
-        else:
-            print("Attention weights are None for cid:", cid)
+        mha_weights[cid] = output[1].cpu().detach().numpy()
+        # else:
+        #     print("Attention weights are None for cid:", cid)
     return hook
-
-
+    
 handle = last_decoder.multihead_attn.register_forward_hook(get_activation(''))
+
+# https://gist.github.com/airalcorn2/50ec06517ce96ecc143503e21fa6cb91
+def patch_attention(m):
+    forward_orig = m.forward
+
+    def wrap(*args, **kwargs):
+        kwargs["need_weights"] = True
+        kwargs["average_attn_weights"] = True
+
+        return forward_orig(*args, **kwargs)
+
+    m.forward = wrap
+
+
+class SaveOutput:
+    def __init__(self):
+        self.outputs = []
+
+    def __call__(self, module, module_in, module_out):
+        self.outputs.append(module_out[1])
+
+    def clear(self):
+        self.outputs = []
+
+patch_attention(model.text_transformer_decoder.layers[-1].multihead_attn)
 
 for i,d in enumerate(gt.generate_examples_train()):
 
@@ -567,11 +604,12 @@ for i,d in enumerate(gt.generate_examples_train()):
                                     max_length=gt.text_trunc_length - 1)
   text_length = np.sum(text_input['attention_mask'])
 
-  mha_weights[cid] = mha_weights[cid][:text_length, 0, :mol_length]
+  mha_weights[cid] = mha_weights[cid][0,:text_length, :mol_length]
 
-  if (i+1) % 1000 == 0: print(i+1)
+  if (i+1) % 1000 == 0: print("Training sample", i+1, "attention extracted.")
 
 for i,d in enumerate(gt.generate_examples_val()):
+  # print("start processing validation set:")
 
   batch = d['input']
 
@@ -591,12 +629,11 @@ for i,d in enumerate(gt.generate_examples_val()):
   text_input = gt.text_tokenizer(gt.descriptions[cid], truncation=True, padding = 'max_length',
                                     max_length=gt.text_trunc_length - 1)
   text_length = np.sum(text_input['attention_mask'])
-  mha_weights[cid] = mha_weights[cid][:text_length, 0, :mol_length]
-
-
-  if (i+1) % 1000 == 0: print(i+1)
+  mha_weights[cid] = mha_weights[cid][0,:text_length, :mol_length]
+  if (i+1) % 1000 == 0: print("Validation sample", i+1, "attention extracted.")
 
 for i,d in enumerate(gt.generate_examples_test()):
+  # print("start processing testing set:")
 
   batch = d['input']
 
@@ -617,14 +654,13 @@ for i,d in enumerate(gt.generate_examples_test()):
   text_input = gt.text_tokenizer(gt.descriptions[cid], truncation=True, padding = 'max_length',
                                     max_length=gt.text_trunc_length - 1)
   text_length = np.sum(text_input['attention_mask'])
-  mha_weights[cid] = mha_weights[cid][:text_length, 0, :mol_length]
-
-
-  if (i+1) % 1000 == 0: print(i+1)
+  mha_weights[cid] = mha_weights[cid][0,:text_length, :mol_length]
+  if (i+1) % 1000 == 0: print("Test sample", i+1, "attention extracted.")
 
 import pickle
 
 path = "attention_weights/"
 with open(path + "mha_weights.pkl", 'wb') as fp:
   pickle.dump(mha_weights, fp)
+  print("Weights updated.")
 
