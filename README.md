@@ -85,6 +85,7 @@ Ablation args include : normalization_layer_removal, max_pool, hidden_layer_remo
 
 To calculate metrics for the attention model:
 > python code/attention_mrr.py --weights_dir <path to mha_weights.pkl, e.g., 'test_output/'> --embeddings_dir <path to embeddings, e.g., 'test_output/embeddings/'>
+
 Or run the jupyter notebook: [association_rules_runnable_debugged_version.ipynb](https://github.com/sherrylinice/598dhl/blob/main/code/notebooks/association_rules_runnable_debugged_version.ipynb)
 
 All code has been rewritten as Python files so far except association_rules.ipynb.
