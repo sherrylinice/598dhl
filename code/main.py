@@ -115,7 +115,7 @@ elif MODEL == "GCN":
     
 
 elif MODEL == "Attention":
-    gd = GenerateDataAttention(text_trunc_length, path_train, path_val, path_test, path_molecules, path_token_embs, sample)
+    gd = GenerateDataAttention(text_trunc_length, path_train, path_val, path_test, path_molecules, path_token_embs)
 
     # Parameters
     params = {'batch_size': BATCH_SIZE,
@@ -383,29 +383,57 @@ else: #Save association rules
     handle = last_decoder.multihead_attn.register_forward_hook(get_activation(''))
 
     # https://gist.github.com/airalcorn2/50ec06517ce96ecc143503e21fa6cb91
-    def patch_attention(m):
-        forward_orig = m.forward
+    #def patch_attention(m):
+    #    forward_orig = m.forward
 
-        def wrap(*args, **kwargs):
-            kwargs["need_weights"] = True
-            kwargs["average_attn_weights"] = True
+    #    def wrap(*args, **kwargs):
+    #        kwargs["need_weights"] = True
+    #       kwargs["average_attn_weights"] = True
 
-            return forward_orig(*args, **kwargs)
+   #         return forward_orig(*args, **kwargs)
 
-        m.forward = wrap
+    #    m.forward = wrap
 
 
-    class SaveOutput:
-        def __init__(self):
-            self.outputs = []
+    #class SaveOutput:
+    #    def __init__(self):
+    #        self.outputs = []
 
-        def __call__(self, module, module_in, module_out):
-            self.outputs.append(module_out[1])
+    #    def __call__(self, module, module_in, module_out):
+    #        self.outputs.append(module_out[1])
 
-        def clear(self):
-            self.outputs = []
+    #    def clear(self):
+    #        self.outputs = []
 
-    patch_attention(model.text_transformer_decoder.layers[-1].multihead_attn)
+    #patch_attention(model.text_transformer_decoder.layers[-1].multihead_attn)
+    class AttentionModifier:
+        def __init__(self, module):
+            self.original_forward = module.forward
+            self._patch_forward(module)
+
+        def _patch_forward(self, module):
+            def modified_forward(*args, **kwargs):
+                # Set attention-related kwargs to ensure proper handling
+                kwargs['need_weights'] = True
+                kwargs['average_attn_weights'] = True
+                return self.original_forward(*args, **kwargs)
+            module.forward = modified_forward
+
+    #class OutputCollector:
+    #    def __init__(self):
+    #        self.outputs = []
+
+    #     def __call__(self, module, module_in, module_out):
+            # Collect the desired output component
+    #        self.outputs.append(module_out[1])
+
+    #    def clear(self):
+    #        self.outputs = []
+
+    # Applying the modification to the attention layer
+    attention_modifier = AttentionModifier(model.text_transformer_decoder.layers[-1].multihead_attn)
+
+
 
     #Go through data to actually get the rules
     for i,d in enumerate(gd.generate_examples_train()):
