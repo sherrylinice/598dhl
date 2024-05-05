@@ -558,30 +558,22 @@ def get_activation(name):
     
 handle = last_decoder.multihead_attn.register_forward_hook(get_activation(''))
 
-# https://gist.github.com/airalcorn2/50ec06517ce96ecc143503e21fa6cb91
-def patch_attention(m):
-    forward_orig = m.forward
+# Add the AttentionModifier class to fix the bug in the original code.
+# Turn on the required flags to save and output the attention weights. 
+class AttentionModifier:
+    def __init__(self, module):
+        self.original_forward = module.forward
+        self._patch_forward(module)
 
-    def wrap(*args, **kwargs):
-        kwargs["need_weights"] = True
-        kwargs["average_attn_weights"] = True
+    def _patch_forward(self, module):
+        def modified_forward(*args, **kwargs):
+            # Set attention-related kwargs to ensure proper handling
+            kwargs['need_weights'] = True
+            kwargs['average_attn_weights'] = True
+            return self.original_forward(*args, **kwargs)
+        module.forward = modified_forward
 
-        return forward_orig(*args, **kwargs)
-
-    m.forward = wrap
-
-
-class SaveOutput:
-    def __init__(self):
-        self.outputs = []
-
-    def __call__(self, module, module_in, module_out):
-        self.outputs.append(module_out[1])
-
-    def clear(self):
-        self.outputs = []
-
-patch_attention(model.text_transformer_decoder.layers[-1].multihead_attn)
+attention_modifier = AttentionModifier(model.text_transformer_decoder.layers[-1].multihead_attn)
 
 for i,d in enumerate(gt.generate_examples_train()):
 
