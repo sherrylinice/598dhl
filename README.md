@@ -94,9 +94,9 @@ To calculate model eval metrics with FPGrowth:
 Or run the jupyter notebook: [association_rules_runnable_debugged_version.ipynb](https://github.com/sherrylinice/598dhl/blob/main/code/notebooks/association_rules_runnable_debugged_version.ipynb)
 
 To visualize the molecule embeddings and text embeddings using t-SNE: 
-> python code/t-sne_chem.py --chem_emb_dir <path to chem_embeddings_train.npy> --cid_emb_dir <path to cids_train.npy>
+> python code/t-sne_chem.py --chem_emb_dir <path to 'chem_embeddings_train.npy'> --cid_emb_dir <path to 'cids_train.npy'>
 
-> python code/t-sne_text.py --chem_emb_dir <path to text_embeddings_train.npy> --cid_emb_dir <path to cids_train.npy>
+> python code/t-sne_text.py --chem_emb_dir <path to 'text_embeddings_train.npy'> --cid_emb_dir <path to 'cids_train.npy'>
 
 All code has been rewritten as Python files so far except association_rules.ipynb. Note: the association_rules.ipynb has been refactored to association_rules_runnable_debugged_version.ipynb. In addition, 
 two separate .py files have been created to implement the attention association rules and the FPGrowth association rules, as attention_mrr.py and fpgrowth_mrr.py respectively. 
