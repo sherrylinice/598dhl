@@ -1,4 +1,3 @@
-
 import pickle
 import csv
 
@@ -14,13 +13,13 @@ from collections import defaultdict
 #Need a special generator for random sampling:
 import argparse
 
-parser = argparse.ArgumentParser(description='Run attention MRR calculation')
-parser.add_argument('--weights_dir', metavar='weights_dir', type=str, 
-                    help='directory where weights is located')
-parser.add_argument('--embeddings_dir', metavar='embeddings_dir', type=str, 
+parser = argparse.ArgumentParser(description='Run FPGrowth MRR calculation')
+#parser.add_argument('--weights_dir', metavar='weights_dir', type=str,
+#                    help='directory where weights is located')
+parser.add_argument('--embeddings_dir', metavar='embeddings_dir', type=str,
                     help='directory where embeddings is located')
-args = parser.parse_args()  
-weights_path = args.weights_dir
+args = parser.parse_args()
+#weights_path = args.weights_dir
 embeddings_path = args.embeddings_dir
 
 class GenerateData():
@@ -364,10 +363,7 @@ print("MLP Hits at 1000:", np.mean(ranks_test1 <= 1000))
 print("MLP Test MRR:", np.mean(1/ranks_test1))
 
 
-# get attention rules
-with open(f'{weights_path}/mha_weights.pkl', 'rb') as f:
-    mha_weights = pickle.load(f)
-
+from collections import defaultdict
 
 all_mol_tokens = set()
 all_text_tokens = set()
@@ -375,32 +371,23 @@ all_text_tokens = set()
 import zipfile
 archive = zipfile.ZipFile(graph_data_path, 'r')
 
-for i, cid in enumerate(mha_weights):
-  attn_weights = mha_weights[cid]
+for i, cid in enumerate(gt.training_cids):
+  #text_input = gt.text_tokenizer(gt.descriptions_train[cid], truncation=True, padding = 'max_length',
+  #                                  max_length=gt.text_trunc_length - 1)
   text_input = gt.text_tokenizer(gt.descriptions[cid], truncation=True, padding = 'max_length',
                                     max_length=gt.text_trunc_length - 1)
   text_length = np.sum(text_input['attention_mask'])
   text_tokens = gt.text_tokenizer.convert_ids_to_tokens(text_input['input_ids'][:text_length])
 
-  gfile = archive.open(cid + '.graph').read().decode('ascii')
-  mol_tokens = {}
-  idx = False
-  for line in gfile.split('\n'):
-    line = line.strip()
-    if line == 'idx to identifier:':
-      idx = True
-      continue
-    if idx and len(line) != 0:
-      id, idf = line.split(" ")
-      mol_tokens[id] = idf
-
-  mol_tokens = list(mol_tokens.values())
+  mol_length = len(gt.molecule_sentences[cid].split())
+  mol_tokens = ['[CLS]']
+  mol_tokens.extend(gt.molecule_sentences[cid].split()[:mol_length])
 
   all_mol_tokens.update(mol_tokens)
   all_text_tokens.update(text_tokens)
 
-mol_token_ids = {}
-text_token_ids = {}
+mol_token_ids = defaultdict(lambda : -1)
+text_token_ids = defaultdict(lambda : -1)
 
 mol_token_ids_rev = {}
 text_token_ids_rev = {}
@@ -410,14 +397,61 @@ for i, k in enumerate(all_mol_tokens):
 for i, k in enumerate(all_text_tokens):
   text_token_ids[k] = i
   text_token_ids_rev[i] = k
+  
+#Create database
 
-support = np.zeros((len(all_text_tokens), len(all_mol_tokens)))
-conf = np.zeros((len(all_text_tokens), len(all_mol_tokens)))
+database = []
 
-for i, cid in enumerate(mha_weights):
-  # print('cid:', cid)
+for cid in gt.training_cids:
+  if cid in gt.validation_cids: continue
+  text_input = gt.text_tokenizer(gt.descriptions[cid], truncation=True, padding = 'max_length',
+                                    max_length=gt.text_trunc_length - 1)
+  text_length = np.sum(text_input['attention_mask'])
+  text_tokens = gt.text_tokenizer.convert_ids_to_tokens(text_input['input_ids'][:text_length])
+  text_tokens = text_tokens[1:-1] #skip [CLS], [SEP]
+
+  mol_length = len(gt.molecule_sentences[cid].split())
+  mol_tokens = gt.molecule_sentences[cid].split()[:mol_length]
+
+  all_tokens = []
+  all_tokens.extend(text_tokens)
+  all_tokens.extend(mol_tokens)
+
+  database.append(all_tokens)
+
+#!pip install mlxtend==0.17.0
+
+from mlxtend.frequent_patterns import fpgrowth
+  
+import sys
+sys.setrecursionlimit(1500)
+
+from mlxtend.preprocessing import TransactionEncoder
+import pandas as pd
+
+te = TransactionEncoder()
+te_ary = te.fit(database).transform(database)
+df = pd.DataFrame(te_ary, columns=te.columns_)
+
+fp = fpgrowth(df, min_support=0.3, use_colnames=True)
+
+from mlxtend.frequent_patterns import association_rules
+
+rules = association_rules(fp, metric="confidence", min_threshold=0.99)
+
+pd.set_option('display.max_columns', 4)
+
+print(rules[['antecedents', 'consequents', 'support', 'confidence']])
+
+#based off FP-growth for 1->1
+normal_support = np.zeros((len(all_text_tokens), len(all_mol_tokens)))
+normal_conf = np.zeros((len(all_text_tokens), len(all_mol_tokens)))
+
+#Create database
+
+for i, cid in enumerate(gt.training_cids):
+
   if cid in gt.validation_cids or cid in gt.test_cids: continue
-  attn_weights = mha_weights[cid]
   text_input = gt.text_tokenizer(gt.descriptions[cid], truncation=True, padding = 'max_length',
                                     max_length=gt.text_trunc_length - 1)
   text_length = np.sum(text_input['attention_mask'])
@@ -434,27 +468,22 @@ for i, cid in enumerate(mha_weights):
     if idx and len(line) != 0:
       id, idf = line.split(" ")
       mol_tokens[id] = idf
+
   mol_tokens = list(mol_tokens.values())
 
   if len(mol_tokens) > gt.mol_trunc_length: mol_tokens = mol_tokens[:gt.mol_trunc_length]
 
   for j, text in enumerate(text_tokens):
     for k, molt in enumerate(mol_tokens):
-#      support[text_token_ids[text], mol_token_ids[molt]] += attn_weights[j,k] #* mol_length # mol_length to normalize
-      if k >= attn_weights.shape[1]:
-            break
-       # fixing the bug of IndexError. attn_weights has a shape of (1, X), iterating through j will cause the index out of bound. 
-      support[text_token_ids[text], mol_token_ids[molt]] += attn_weights[0, k]
+      normal_support[text_token_ids[text], mol_token_ids[molt]] += 1
+
 
   if (i+1) % 1000 == 0: print(i+1)
 
 print("Support calculation finished.")
 
 for j, text in enumerate(all_text_tokens):
-  if np.sum(support[text_token_ids[text], :]) == 0:
-    conf[text_token_ids[text], :] = 0.0
-  else:
-    conf[text_token_ids[text], :] = support[text_token_ids[text], :] / np.sum(support[text_token_ids[text], :])
+  normal_conf[text_token_ids[text], :] = normal_support[text_token_ids[text], :] / np.sum(normal_support[text_token_ids[text], :])
 
   if (j+1) % 1000 == 0: print(j+1)
 
@@ -504,49 +533,35 @@ def ar_score(text_cid, mol_cid, top_num=10):
 
   rules = generate_rules(text_tokens, mol_tokens)
 
-  tmp = np.array([conf[list(r[0])[0], list(r[1])[0]] for r in rules])
+  tmp = np.array([normal_conf[list(r[0])[0], list(r[1])[0]] for r in rules])
+
 
   mx = np.min((top_num, len(tmp)))
   top_confs = -np.partition(-tmp, mx-1)[:mx]
 
-
   return np.mean(top_confs)
 
-# calculate ar_scores using alpha = 0
+
+import operator
+from collections import defaultdict
 
 alpha = 0.0
-print(f'alpha={alpha}')
 
+
+hits_at_one = 0
+hits_at_ten = 0
+hits_at_100 = 0
 
 ar_scores = np.zeros((len(top_cids_val1), num_top))
 
 new_ranks_val = []
 for i, cid in enumerate(top_cids_val1):
 
-  text_input = gt.text_tokenizer(gt.descriptions[cid], truncation=True, padding = 'max_length',
-                                    max_length=gt.text_trunc_length - 1)
-  text_length = np.sum(text_input['attention_mask'])
-  text_tokens = gt.text_tokenizer.convert_ids_to_tokens(text_input['input_ids'][:text_length])
-
   score = np.zeros((num_top))
   for j, cid2 in enumerate(top_cids_val1[cid]):
-    gfile = archive.open(cid + '.graph').read().decode('ascii')
-    mol_tokens = {}
-    idx = False
-    for line in gfile.split('\n'):
-      line = line.strip()
-      if line == 'idx to identifier:':
-        idx = True
-        continue
-      if idx and len(line) != 0:
-        id, idf = line.split(" ")
-        mol_tokens[id] = idf
-    mol_tokens = list(mol_tokens.values())
-
     tmp = ar_score(cid, cid2)
     ar_scores[i,j] = tmp
     score[j] = alpha * scores_val1[cid][j] + (1 - alpha) * tmp
-
   try:
     old_loc = top_cids_val1[cid].index(cid)
 
@@ -559,13 +574,24 @@ for i, cid in enumerate(top_cids_val1):
 
   new_ranks_val.append(new_rank)
 
+  if new_rank <= 1:
+      hits_at_one += 1
+  if new_rank <= 10:
+      hits_at_ten += 1
+  if new_rank <= 100:
+      hits_at_100 += 1
 
   if (i+1) % 200 == 0: print(i+1)
 
-new_ranks_val = np.array(new_ranks_val)
+print()
+print("Val Mean rank:", np.mean(new_ranks_val))
+print("Hits at 1:", hits_at_one/cids_val1.size)
+print("Hits at 10:", hits_at_ten/cids_val1.size)
+print("Hits at 100:", hits_at_100/cids_val1.size)
+
+print("Validation MRR:", np.mean(1/np.array(new_ranks_val)))
 
 
-# alpha 0 - 101
 x = np.linspace(0.0,1,101)
 MRRs = []
 hits1 = []
@@ -573,9 +599,8 @@ hits10 = []
 
 
 for n in x:
-  
   alpha = n
-  # print("alpha:", alpha)
+
   hits_at_one = 0
   hits_at_ten = 0
   hits_at_100 = 0
@@ -585,8 +610,6 @@ for n in x:
 
     score = np.zeros((num_top))
     for j, cid2 in enumerate(top_cids_val1[cid]):
-      # tmp = ar_score(cid, cid2)
-      # ar_scores[i,j] = tmp
       score[j] = alpha * scores_val1[cid][j] + (1 - alpha) * ar_scores[i,j]
 
     try:
@@ -607,7 +630,6 @@ for n in x:
         hits_at_ten += 1
     if new_rank <= 100:
         hits_at_100 += 1
-  print("alpha:", alpha, ", MRR:", np.mean(1/np.array(tmp_ranks)))
 
   MRRs.append(np.mean(1/np.array(tmp_ranks)))
   hits1.append(hits_at_one/cids_val1.size)
@@ -620,41 +642,28 @@ print("Hits at 100:", hits_at_100/cids_val1.size)
 
 print("Validation MRR:", np.mean(1/np.array(tmp_ranks)))
 
+
 import operator
 from collections import defaultdict
 
-alpha = x[np.argmax(MRRs)]
-print(f'alpha: {alpha}')
+alpha = 0.0
+
+
+hits_at_one = 0
+hits_at_ten = 0
+hits_at_100 = 0
 
 ar_scores_test = np.zeros((len(top_cids_test1), num_top))
 
 new_ranks_test = []
 for i, cid in enumerate(top_cids_test1):
 
-  text_input = gt.text_tokenizer(gt.descriptions[cid], truncation=True, padding = 'max_length',
-                                    max_length=gt.text_trunc_length - 1)
-  text_length = np.sum(text_input['attention_mask'])
-  text_tokens = gt.text_tokenizer.convert_ids_to_tokens(text_input['input_ids'][:text_length])
-
   score = np.zeros((num_top))
   for j, cid2 in enumerate(top_cids_test1[cid]):
-    gfile = archive.open(cid + '.graph').read().decode('ascii')
-    mol_tokens = {}
-    idx = False
-    for line in gfile.split('\n'):
-      line = line.strip()
-      if line == 'idx to identifier:':
-        idx = True
-        continue
-      if idx and len(line) != 0:
-        id, idf = line.split(" ")
-        mol_tokens[id] = idf
-    mol_tokens = list(mol_tokens.values())
 
     tmp = ar_score(cid, cid2)
     ar_scores_test[i,j] = tmp
     score[j] = alpha * scores_test1[cid][j] + (1 - alpha) * tmp
-
   try:
     old_loc = top_cids_test1[cid].index(cid)
 
@@ -667,19 +676,71 @@ for i, cid in enumerate(top_cids_test1):
 
   new_ranks_test.append(new_rank)
 
+  if new_rank <= 1:
+      hits_at_one += 1
+  if new_rank <= 10:
+      hits_at_ten += 1
+  if new_rank <= 100:
+      hits_at_100 += 1
 
   if (i+1) % 200 == 0: print(i+1)
 
-new_ranks_test = np.array(new_ranks_test)
-
 print()
 print("Test Mean rank:", np.mean(new_ranks_test))
-print("Hits at 1:", np.mean(new_ranks_test <= 1))
-print("Hits at 10:", np.mean(new_ranks_test <= 10))
-print("Hits at 100:", np.mean(new_ranks_test <= 100))
+print("Hits at 1:", hits_at_one/cids_test1.size)
+print("Hits at 10:", hits_at_ten/cids_test1.size)
+print("Hits at 100:", hits_at_100/cids_test1.size)
 
 print("Test MRR:", np.mean(1/np.array(new_ranks_test)))
 
 
+import operator
+from collections import defaultdict
 
+first = np.argmax(MRRs)
+last = len(MRRs) - np.argmax(MRRs[::-1])
+
+alpha = (x[first] + x[last])/2
+print(alpha)
+
+hits_at_one = 0
+hits_at_ten = 0
+hits_at_100 = 0
+
+new_ranks_test = []
+for i, cid in enumerate(top_cids_test1):
+
+
+  score = np.zeros((num_top))
+  for j, cid2 in enumerate(top_cids_test1[cid]):
+
+    score[j] = alpha * scores_test1[cid][j] + (1 - alpha) * ar_scores_test[i,j]
+  try:
+    old_loc = top_cids_test1[cid].index(cid)
+
+    sorted = np.argsort(-score, kind='stable')
+
+    new_rank = np.where(sorted == old_loc)[0][0] + 1
+
+  except ValueError:
+    new_rank = ranks_test1[i]
+
+  new_ranks_test.append(new_rank)
+
+  if new_rank <= 1:
+      hits_at_one += 1
+  if new_rank <= 10:
+      hits_at_ten += 1
+  if new_rank <= 100:
+      hits_at_100 += 1
+
+  if (i+1) % 200 == 0: print(i+1)
+
+print()
+print("Test Mean rank:", np.mean(new_ranks_test))
+print("Hits at 1:", hits_at_one/cids_test1.size)
+print("Hits at 10:", hits_at_ten/cids_test1.size)
+print("Hits at 100:", hits_at_100/cids_test1.size)
+
+print("Test MRR:", np.mean(1/np.array(new_ranks_test)))
 
