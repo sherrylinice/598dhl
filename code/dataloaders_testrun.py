@@ -20,7 +20,7 @@ from torch_geometric.data import Data, Batch
 #Need a special generator for random sampling:
 
 class GenerateData():
-  def __init__(self, text_trunc_length, path_train, path_val, path_test, path_molecules, path_token_embs):
+  def __init__(self, text_trunc_length, path_train, path_val, path_test, path_molecules, path_token_embs, text_length_ablation):
     self.path_train = path_train
     self.path_val = path_val
     self.path_test = path_test
@@ -28,6 +28,8 @@ class GenerateData():
     self.path_token_embs = path_token_embs
 
     self.text_trunc_length = text_trunc_length 
+    self.text_length_ablation = text_length_ablation
+    # self.sample = sample
 
     self.prep_text_tokenizer()
 
@@ -75,44 +77,82 @@ class GenerateData():
     with open(self.path_train) as f:
       reader = csv.DictReader(f, delimiter="\t", quoting=csv.QUOTE_NONE, fieldnames = ['cid', 'mol2vec', 'desc'])
       for n, line in enumerate(reader):
-        self.descriptions[line['cid']] = line['desc']
-        self.mols[line['cid']] = line['mol2vec']
-        self.training_cids.append(line['cid'])
+        if self.text_length_ablation == "long":
+          if len(line['desc']) > 300:
+            self.descriptions[line['cid']] = line['desc']
+            self.mols[line['cid']] = line['mol2vec']
+            self.training_cids.append(line['cid'])
+        elif self.text_length_ablation == "short":
+          if len(line['desc']) <= 300:            
+            self.descriptions[line['cid']] = line['desc']
+            self.mols[line['cid']] = line['mol2vec']
+            self.training_cids.append(line['cid'])    
+        else:  
+            self.descriptions[line['cid']] = line['desc']
+            self.mols[line['cid']] = line['mol2vec']
+            self.training_cids.append(line['cid'])      
     # sample 50% from the training_cids
     #random.seed(0)
-    #self.training_cids_sample  = random.sample(self.training_cids, int(len(self.training_cids)/2000))
-    self.training_cids_sample = self.training_cids
+    # if self.sample == True:
+    #   self.training_cids = random.sample(self.training_cids, int(len(self.training_cids)/10))
+    # self.training_cids_sample = self.training_cids
         
     self.validation_cids = []
     #get validation set cids...
     with open(self.path_val) as f:
       reader = csv.DictReader(f, delimiter="\t", quoting=csv.QUOTE_NONE, fieldnames = ['cid', 'mol2vec', 'desc'])
       for n, line in enumerate(reader):
-        self.descriptions[line['cid']] = line['desc']
-        self.mols[line['cid']] = line['mol2vec']
-        self.validation_cids.append(line['cid'])
-    #self.validation_cids_sample  = random.sample(self.validation_cids, int(len(self.validation_cids)/200))
-    self.validation_cids_sample = self.validation_cids
+        if self.text_length_ablation == "long":
+          if len(line['desc']) > 300:
+            self.descriptions[line['cid']] = line['desc']
+            self.mols[line['cid']] = line['mol2vec']
+            self.validation_cids.append(line['cid'])
+        elif self.text_length_ablation == "short":
+          if len(line['desc']) <= 300:            
+            self.descriptions[line['cid']] = line['desc']
+            self.mols[line['cid']] = line['mol2vec']
+            self.validation_cids.append(line['cid'])    
+        else:  
+            self.descriptions[line['cid']] = line['desc']
+            self.mols[line['cid']] = line['mol2vec']
+            self.validation_cids.append(line['cid'])         
+    # if self.sample == True:
+    #   self.validation_cids  = random.sample(self.validation_cids, int(len(self.validation_cids)/10))
+    # self.validation_cids_sample = self.validation_cids
 
     self.test_cids = []
     #get test set cids...
     with open(self.path_test) as f:
       reader = csv.DictReader(f, delimiter="\t", quoting=csv.QUOTE_NONE, fieldnames = ['cid', 'mol2vec', 'desc'])
       for n, line in enumerate(reader):
-        self.descriptions[line['cid']] = line['desc']
-        self.mols[line['cid']] = line['mol2vec']
-        self.test_cids.append(line['cid'])
-    #self.test_cids_sample  = random.sample(self.test_cids, int(len(self.test_cids)/200))
+        if self.text_length_ablation == "long":
+          if len(line['desc']) > 300:
+            self.descriptions[line['cid']] = line['desc']
+            self.mols[line['cid']] = line['mol2vec']
+            self.test_cids.append(line['cid'])
+        elif self.text_length_ablation == "short":
+          if len(line['desc']) <= 300:            
+            self.descriptions[line['cid']] = line['desc']
+            self.mols[line['cid']] = line['mol2vec']
+            self.test_cids.append(line['cid'])    
+        else:  
+            self.descriptions[line['cid']] = line['desc']
+            self.mols[line['cid']] = line['mol2vec']
+            self.test_cids.append(line['cid'])   
+    # if self.sample == True:
+    #   self.test_cids  = random.sample(self.test_cids, int(len(self.test_cids)/10))
+    # self.test_cids_sample  = random.sample(self.test_cids, int(len(self.test_cids)/2))
+
     self.test_cids_sample  = self.test_cids
 
 
   def generate_examples_train(self):
     """Yields examples."""
-    # np.random.shuffle(self.training_cids)
-    np.random.shuffle(self.training_cids_sample)
+    np.random.shuffle(self.training_cids)
+    # np.random.shuffle(self.training_cids_sample)
 
-    # for cid in self.training_cids:
-    for cid in self.training_cids_sample:
+    for cid in self.training_cids:
+    # for cid in self.training_cids_sample:
       text_input = self.text_tokenizer(self.descriptions[cid], truncation=True, max_length=self.text_trunc_length,
                                         padding='max_length', return_tensors = 'np')
 
@@ -134,11 +174,11 @@ class GenerateData():
   def generate_examples_val(self):
     """Yields examples."""
 
-    # np.random.shuffle(self.validation_cids)
-    np.random.shuffle(self.validation_cids_sample)
+    np.random.shuffle(self.validation_cids)
+    # np.random.shuffle(self.validation_cids_sample)
 
-    # for cid in self.validation_cids:
-    for cid in self.validation_cids_sample:
+    for cid in self.validation_cids:
+    # for cid in self.validation_cids_sample:
         text_input = self.text_tokenizer(self.descriptions[cid], truncation=True, padding = 'max_length', 
                                          max_length=self.text_trunc_length, return_tensors = 'np')
 
@@ -162,11 +202,11 @@ class GenerateData():
   def generate_examples_test(self):
     """Yields examples."""
 
-    # np.random.shuffle(self.test_cids)
-    np.random.shuffle(self.test_cids_sample)
+    np.random.shuffle(self.test_cids)
+    # np.random.shuffle(self.test_cids_sample)
 
-    # for cid in self.test_cids:
-    for cid in self.test_cids_sample:
+    for cid in self.test_cids:
+    # for cid in self.test_cids_sample:
         text_input = self.text_tokenizer(self.descriptions[cid], truncation=True, padding = 'max_length', 
                                          max_length=self.text_trunc_length, return_tensors = 'np')
 
@@ -224,9 +264,9 @@ class MolDataset(Dataset):
 def get_dataloader(data_generator, params):
 
     # training_set = MolDataset(data_generator.generate_examples_train, len(data_generator.training_cids))
-    training_set = MolDataset(data_generator.generate_examples_train, len(data_generator.training_cids_sample))
-    validation_set = MolDataset(data_generator.generate_examples_val, len(data_generator.validation_cids_sample))
-    test_set = MolDataset(data_generator.generate_examples_test, len(data_generator.test_cids_sample))
+    training_set = MolDataset(data_generator.generate_examples_train, len(data_generator.training_cids))
+    validation_set = MolDataset(data_generator.generate_examples_val, len(data_generator.validation_cids))
+    test_set = MolDataset(data_generator.generate_examples_test, len(data_generator.test_cids))
 
 
     # train_sampler = RandomSampler(training_set, num_samples = int(training_set.__len__()/2))
@@ -378,7 +418,7 @@ def get_graph_data(data_generator, graph_data_path):
 
 
 class GenerateDataAttention():
-  def __init__(self, text_trunc_length, path_train, path_val, path_test, path_molecules, path_token_embs):
+  def __init__(self, text_trunc_length, path_train, path_val, path_test, path_molecules, path_token_embs, sample):
     self.path_train = path_train
     self.path_val = path_val
     self.path_test = path_test
@@ -386,6 +426,8 @@ class GenerateDataAttention():
     self.path_token_embs = path_token_embs
 
     self.text_trunc_length = text_trunc_length 
+
+    self.sample = sample
 
     self.prep_text_tokenizer()
     
@@ -435,7 +477,10 @@ class GenerateDataAttention():
         self.descriptions[line['cid']] = line['desc']
         self.mols[line['cid']] = line['mol2vec']
         self.training_cids.append(line['cid'])
-        
+
+    if self.sample == True:
+          self.training_cids  = random.sample(self.training_cids, int(len(self.training_cids)/10))
+
     self.validation_cids = []
     #get validation set cids...
     with open(self.path_val) as f:
@@ -444,6 +489,9 @@ class GenerateDataAttention():
         self.descriptions[line['cid']] = line['desc']
         self.mols[line['cid']] = line['mol2vec']
         self.validation_cids.append(line['cid'])
+
+    if self.sample == True:
+          self.validation_cids  = random.sample(self.validation_cids, int(len(self.validation_cids)/10))    
         
     self.test_cids = []
     with open(self.path_test) as f:
@@ -452,6 +500,9 @@ class GenerateDataAttention():
         self.descriptions[line['cid']] = line['desc']
         self.mols[line['cid']] = line['mol2vec']
         self.test_cids.append(line['cid'])
+
+    if self.sample == True:
+          self.test_cids  = random.sample(self.test_cids, int(len(self.test_cids)/10))
 
   #transformers can't take array with full attention so have to pad a 0...
   def padarray(self, A, size, value=0):
@@ -464,6 +515,7 @@ class GenerateDataAttention():
 
     np.random.shuffle(self.training_cids)
 
+    cnt = 0
     for cid in self.training_cids:
       label = np.random.randint(2)
       rand_cid = np.random.choice(self.training_cids)
@@ -491,6 +543,8 @@ class GenerateDataAttention():
           },
           'label': label
       }
+      cnt += 1
+      if cnt > 1001: return
 
 
   def generate_examples_val(self):
@@ -498,6 +552,7 @@ class GenerateDataAttention():
 
     np.random.shuffle(self.validation_cids)
 
+    cnt = 0
     for cid in self.validation_cids:
       label = np.random.randint(2)
       rand_cid = np.random.choice(self.validation_cids)
@@ -526,12 +581,15 @@ class GenerateDataAttention():
           },
           'label': label
       }
+      cnt += 1
+      if cnt > 1001: return
 
   def generate_examples_test(self):
     """Yields examples."""
 
     np.random.shuffle(self.test_cids)
 
+    cnt = 0
     for cid in self.test_cids:
       label = np.random.randint(2)
       rand_cid = np.random.choice(self.test_cids)
@@ -560,6 +618,8 @@ class GenerateDataAttention():
           },
           'label': label
       }
+      cnt += 1
+      if cnt > 1001: return
 
 
 class AttentionDataset(Dataset):
@@ -571,6 +631,7 @@ class AttentionDataset(Dataset):
       self.it = iter(self.gen())
 
       self.length = length
+      self.length = 32
 
   def __len__(self):
       'Denotes the total number of samples'
