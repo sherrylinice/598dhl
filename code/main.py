@@ -111,7 +111,7 @@ elif MODEL == "GCN":
     
     graph_batcher_tr, graph_batcher_val, graph_batcher_test = get_graph_data(gd, graph_data_path)
 
-    model = GCNModel(num_node_features=gragh_batcher_tr.dataset.num_node_features, ninp = 768, nhid = 600, nout = 300, gragh_hidden_channels = 600, ablation_option = ablation_option)
+    model = GCNModel(num_node_features=graph_batcher_tr.dataset.num_node_features, ninp = 768, nhid = 600, nout = 300, graph_hidden_channels = 600, ablation_option = ablation_option)
     
 
 elif MODEL == "Attention":
