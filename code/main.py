@@ -101,7 +101,7 @@ if MODEL == "MLP":
     model = MLPModel(ninp = 768, nhid = 600, nout = 300, ablation_option = ablation_option)
 
 elif MODEL == "GCN":
-    gd = GenerateData(text_trunc_length, path_train, path_val, path_test, path_molecules, path_token_embs)
+    gd = GenerateData(text_trunc_length, path_train, path_val, path_test, path_molecules, path_token_embs, ablation_option.text_length_ablation)
 
     # Parameters
     params = {'batch_size': BATCH_SIZE,
@@ -115,7 +115,7 @@ elif MODEL == "GCN":
     
 
 elif MODEL == "Attention":
-    gd = GenerateDataAttention(text_trunc_length, path_train, path_val, path_test, path_molecules, path_token_embs)
+    gd = GenerateDataAttention(text_trunc_length, path_train, path_val, path_test, path_molecules, path_token_embs, ablation_option.text_length_ablation)
 
     # Parameters
     params = {'batch_size': BATCH_SIZE,
