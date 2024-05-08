@@ -6,7 +6,7 @@ Sherry Li (xuehail2@illinois.edu), Jo Yang (jiaoy2@illinois.edu)
 
 ## Project Draft Jupyter Notebook
 
-Please find our project draft Jupyter notebook here: [DL4H_Team_21.ipynb](https://github.com/sherrylinice/598dhl/blob/main/DL4H_Team_21%20Final.ipynb), and refer to the provided instructions before running it: [instruction doc for running DL4H_Team_21.ipynb](https://github.com/sherrylinice/598dhl/blob/f011712ec4e8754a0ce2969d6873fa31c8304e68/Instruction%20to%20run%20DL4H_Team21.ipynb%20(1).docx). Your feedback and questions are welcomed!
+Please find our project draft Jupyter notebook here: [DL4H_Team_21.ipynb (https://github.com/sherrylinice/598dhl/blob/main/DL4H_Team_21%20Final..ipynb), and refer to the provided instructions before running it: [instruction doc for running DL4H_Team_21.ipynb](https://github.com/sherrylinice/598dhl/blob/f011712ec4e8754a0ce2969d6873fa31c8304e68/Instruction%20to%20run%20DL4H_Team21.ipynb%20(1).docx). Your feedback and questions are welcomed!
 
 ## Text2Mol
 
